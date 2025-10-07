@@ -64,7 +64,7 @@ for msg in st.session_state.messages:
 
 # User input form
 with st.form("chat_form", clear_on_submit=True):
-    user_input = st.text_input("Commercial enquire:", "")
+    user_input = st.text_input("Commercial enquiry:", "")
 
     question_type = st.radio(
         "Select role:",
