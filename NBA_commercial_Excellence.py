@@ -5,8 +5,8 @@ import json
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
-API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_tejasri%20Task"
-API_KEY = "1CQHpI3oOHloqEWhh1Exwp0AToE7qqJF"
+API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v2%20Task"
+API_KEY = "wWUs3tTG7Sl5vFpV0oXS85DhYXTbyGRQ"
 
 st.set_page_config(
     page_title="NBA for Commercial Pharma",
@@ -15,19 +15,20 @@ st.set_page_config(
 )
 
 # -----------------------------
-# DARK MODE + FIXED TEXT + FIXED BUTTON
+# LIGHT THEME CSS (WHITE BACKGROUND)
 # -----------------------------
 st.markdown("""
 <style>
 
-/* Global background and text */
+/* Global background + text */
 html, body, [data-testid="stAppViewContainer"] {
-    background-color: #0f1116 !important;
-    color: #e6e6e6 !important;
+    background-color: #ffffff !important;   /* White */
+    color: #000000 !important;              /* Black text */
 }
 
+/* Headings and normal text */
 h1, h2, h3, h4, h5, h6, p, label, span {
-    color: #ffffff !important;
+    color: #000 !important;
 }
 
 /* Input container styling */
@@ -35,40 +36,40 @@ h1, h2, h3, h4, h5, h6, p, label, span {
 .stTextArea > div,
 .stSelectbox > div,
 .stRadio > div {
-    background-color: #1a1c22 !important;
-    border: 1px solid #333 !important;
+    background-color: #f8f9fa !important;  /* Light grey */
+    border: 1px solid #ccc !important;
     border-radius: 10px !important;
 }
 
-/* Text box input text (normal input) */
+/* Text inside inputs */
 .stTextInput input {
-    color: #fff !important;
+    color: #000 !important;
 }
 
-/* TEXT AREA FIX — BLACK TEXT + WHITE BACKGROUND */
+/* TEXT AREA */
 .stTextArea textarea {
-    color: #000 !important;             /* Black text */
-    background-color: #fff !important;  /* White background */
+    color: #000 !important;             
+    background-color: #fff !important;  
     border-radius: 10px !important;
 }
 
-/* Placeholder */
+/* Placeholder styling */
 .stTextInput input::placeholder,
 .stTextArea textarea::placeholder {
-    color: #888 !important;
+    color: #777 !important;
 }
 
-/* Form container styling */
+/* Form container */
 [data-testid="stForm"] {
-    background-color: #16181d !important;
+    background-color: #f2f2f2 !important;
     padding: 20px !important;
     border-radius: 12px !important;
-    border: 1px solid #2a2d34 !important;
+    border: 1px solid #ddd !important;
 }
 
-/* FIX: Streamlit 1.30+ button */
+/* Primary button */
 button[data-testid="baseButton-primary"] {
-    background-color: #3b82f6 !important;
+    background-color: #2563eb !important;
     color: white !important;
     border-radius: 8px !important;
     padding: 0.6em 1.2em !important;
@@ -77,18 +78,18 @@ button[data-testid="baseButton-primary"] {
 }
 
 button[data-testid="baseButton-primary"]:hover {
-    background-color: #2563eb !important;
+    background-color: #1d4ed8 !important;
 }
 
-/* Info alert styling */
+/* Info alert box */
 .stAlert {
-    background-color: #1e2127 !important;
-    color: #fff !important;
+    background-color: #eef6ff !important;
+    color: #000 !important;
     border-left: 4px solid #3b82f6 !important;
 }
 
 hr {
-    border-color: #333 !important;
+    border-color: #ccc !important;
 }
 
 </style>
@@ -104,7 +105,7 @@ st.markdown(
              alt="Allot Logo" width="260">
         <br><br>
         <a href="https://www.allotltd.com/"
-            style="text-decoration:none; font-size:22px; color:#3b82f6; font-weight:500;">
+            style="text-decoration:none; font-size:22px; color:#2563eb; font-weight:500;">
             www.allotltd.com
         </a>
     </div>
@@ -138,13 +139,13 @@ This demo only reflects **Saudi Arabia diabetes market data**, including:
 
 ### 💡 Sample Questions
 - *Sales Representative:*  
-  Analyse call notes data and generate NBA for high-potential prescribers of **Empagliflozin**.
+  Analyse call notes data and generate NBA for high-potential prescribers of **Empagliflozin** and explain why?.
 
 - *Market Access Specialist:*  
-  Generate NBAs to improve access for **Semaglutide** based on payer, formulary, and CRM data.
+  Give me the Market Access Strategy for five hospitals with greatest number of diabetes patients. Consider reimbursement status and the market overview?
 
 - *Medical Science Liaison (MSL):*  
-  Identify follow-up requests or scientific questions from call notes.
+  Analyze the call notes data for any MSL follow-up requests or complex clinical questions flagged by the Sales Team, or for any KOLs requesting specific data. Generate the 'Next Best Action' (NBA) for each assigned MSL, prioritizing engagements that address complex topics beyond the sales representative’s scope.
 """
 )
 
