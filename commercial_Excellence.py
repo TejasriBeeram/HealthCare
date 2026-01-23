@@ -141,12 +141,12 @@ This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes 
 - Sales data  
 - HCP profiles  
 - Call notes  
+- Type 2 Diabetes Mellitus
 - Market summaries  
 - Scientific publication data
 
- Specifically focusing on:
+ Specifically focusing on Diabetes Medicines like :
  
-- Type 2 Diabetes Mellitus
 - SGLT-2 inhibitors
 - Metformin
 
