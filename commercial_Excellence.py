@@ -128,6 +128,7 @@ st.markdown(
 ### 📘 Overview
 
 Content Intelligence transforms raw scientific data into a strategic asset. Instead of relying on static slides, Field and Medical teams use AI-driven insights to deliver the right clinical evidence to the right Healthcare Professional (HCP) at the right moment. This application provides Content Intelligence and Next Best Actions (NBAs), offering a concise, evidence-based view of Type 2 diabetes management. It covers both established and emerging therapies—such as metformin and SGLT2 inhibitors—along with their clinical benefits, safety considerations, and patient guidance.
+
 **Core benefits:**
 * **Precision:** Tailor complex data to address specific HCP knowledge gaps.
 * **Compliance:** Update and distribute approved materials globally, instantly.
@@ -141,7 +142,7 @@ This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes 
 - Call notes  
 - Market summaries  
 - Scientific publication data
-Specifically focusing on:
+* Specifically focusing on:
 - Type 2 Diabetes Mellitus
 - SGLT-2 inhibitors
 - Metformin
