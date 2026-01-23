@@ -152,13 +152,13 @@ This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes 
 
 ### 💡 Sample Questions
 - *Sales Representative:*  
-  Analyse call notes data and generate NBA for high-potential prescribers of **Empagliflozin** and explain why?.
+  What industry guidance is followed for Type 2 diabetes mellitus in the USA and in KSA?
 
 - *Market Access Specialist:*  
-  Give me the Market Access Strategy for five hospitals with greatest number of diabetes patients. Consider reimbursement status and the market overview?
-
+  Produce the case study of a Metformin patient and impact of the drug? Present the case study of Rick.
+  
 - *Medical Science Liaison (MSL):*  
-  Analyze the call notes data for any MSL follow-up requests or complex clinical questions flagged by the Sales Team, or for any KOLs requesting specific data. Generate the 'Next Best Action' (NBA) for each assigned MSL, prioritizing engagements that address complex topics beyond the sales representative’s scope.
+  What is the prescribing guidance of Type 2 diabetes mellitus as per NHS and how it's different from KSA guidelines? 
 """
 )
 
