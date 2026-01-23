@@ -117,7 +117,7 @@ st.markdown(
 # -----------------------------
 # PAGE TITLE
 # -----------------------------
-st.markdown("## 💬 **Next Best Action for Commercial Pharma**")
+st.markdown("## 💬 **Content Intelligence for Field & Medical Teams**")
 st.write("---")
 
 # -----------------------------
@@ -127,15 +127,24 @@ st.markdown(
     """
 ### 📘 Overview
 
-This application offers the **Next Best Actions (NBAs)** for commercial, sales, market access, and medical pharmaceutical field teams. It focuses on the diabetes market in the Kingdom of Saudi Arabia(KSA). Analysis of client internal sales, CRM call notes, medical data, together with external in-market policy, healthcare data, recent medical publications, and future health conferences are governed by client specific business rules that control the output.
+Content Intelligence transforms raw scientific data into a strategic asset. Instead of relying on static slides, Field and Medical teams use AI-driven insights to deliver the right clinical evidence to the right Healthcare Professional (HCP) at the right moment. This application provides Content Intelligence and Next Best Actions (NBAs), offering a concise, evidence-based view of Type 2 diabetes management. It covers both established and emerging therapies—such as metformin and SGLT2 inhibitors—along with their clinical benefits, safety considerations, and patient guidance.
+**Core benefits:**
+* **Precision:** Tailor complex data to address specific HCP knowledge gaps.
+* **Compliance:** Update and distribute approved materials globally, instantly.
+* **Impact:** Use engagement analytics to identify which scientific narratives actually improve clinical understanding.
+By bridging the gap between medical strategy and field execution, Content Intelligence ensures every interaction is evidence-based, personalized, and efficient.
 
 ### ⚠️ Data Limitations
-This demo only reflects **Saudi Arabia diabetes market data**, including:
+This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes market data**, with some data from the **UK** and **USA**, including:
 - Sales data  
 - HCP profiles  
 - Call notes  
 - Market summaries  
 - Scientific publication data
+Specifically focusing on:
+- Type 2 Diabetes Mellitus
+- SGLT-2 inhibitors
+- Metformin
 
 ### 💡 Sample Questions
 - *Sales Representative:*  
