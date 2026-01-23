@@ -133,6 +133,7 @@ Content Intelligence transforms raw scientific data into a strategic asset. Inst
 * **Precision:** Tailor complex data to address specific HCP knowledge gaps.
 * **Compliance:** Update and distribute approved materials globally, instantly.
 * **Impact:** Use engagement analytics to identify which scientific narratives actually improve clinical understanding.
+
 By bridging the gap between medical strategy and field execution, Content Intelligence ensures every interaction is evidence-based, personalized, and efficient.
 
 ### ⚠️ Data Limitations
@@ -142,7 +143,9 @@ This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes 
 - Call notes  
 - Market summaries  
 - Scientific publication data
-* Specifically focusing on:
+
+ Specifically focusing on:
+ 
 - Type 2 Diabetes Mellitus
 - SGLT-2 inhibitors
 - Metformin
