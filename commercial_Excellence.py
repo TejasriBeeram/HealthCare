@@ -128,10 +128,12 @@ st.markdown(
 ### 📘 Overview
 
 Content Intelligence transforms raw scientific data into a strategic asset. Instead of relying on static slides, Field and Medical teams use AI-driven insights to deliver the right clinical evidence to the right Healthcare Professional (HCP) at the right moment. This application provides Content Intelligence and Next Best Actions (NBAs), offering a concise, evidence-based view of Type 2 diabetes management. It covers both established and emerging therapies—such as metformin and SGLT2 inhibitors—along with their clinical benefits, safety considerations, and patient guidance.
-Core benefits:
-* Precision: Tailor complex data to address specific HCP knowledge gaps.
-* Compliance: Update and distribute approved materials globally, instantly.
-* Impact: Use engagement analytics to identify which scientific narratives actually improve clinical understanding.
+
+**Core benefits:**
+* **Precision:** Tailor complex data to address specific HCP knowledge gaps.
+* **Compliance:** Update and distribute approved materials globally, instantly.
+* **Impact:** Use engagement analytics to identify which scientific narratives actually improve clinical understanding.
+
 By bridging the gap between medical strategy and field execution, Content Intelligence ensures every interaction is evidence-based, personalized, and efficient.
 
 ### ⚠️ Data Limitations
