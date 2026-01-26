@@ -9,7 +9,7 @@ API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/p
 API_KEY = "HqGDBWRAfiuTp9ZD4Fn0iElfGizveHOX"
 
 st.set_page_config(
-    page_title="Commercial Pharma",
+    page_title="Content Intelligence for Field & Medical Teams",
     page_icon="💬",
     layout="centered"
 )
@@ -144,7 +144,7 @@ This demo only reflects diabetes data of **Saudi Arabia diabetes market data**, 
 - Market summaries  
 - Scientific publication data
 
-some more medical related data like 
+Some more medical related data like 
 - SGLT2 inhibitors
 - Metformin
 
