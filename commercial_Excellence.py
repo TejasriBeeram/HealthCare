@@ -137,7 +137,7 @@ Content Intelligence transforms raw scientific data into a strategic asset. Inst
 By bridging the gap between medical strategy and field execution, Content Intelligence ensures every interaction is evidence-based, personalized, and efficient.
 
 ### ⚠️ Data Limitations
-This demo only reflects diabetes data of **Saudi Arabia diabetes market data**, and also some data of **UK** and **USA** including:
+This demo only reflects diabetes data of **Saudi Arabia diabetes market data**, and also with selected supporting data from **UK** and **USA** including:
 - Sales data  
 - HCP profiles  
 - Call notes  
