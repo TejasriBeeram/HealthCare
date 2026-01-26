@@ -153,7 +153,7 @@ Some more medical related data like
 - *Market Access Specialist:*  
  What is the prescribing guidance of Type 2 diabetes mellitus as per NHS and how it's different from KSA guidelines? 
 - *Medical Science Liaison (MSL):*  
- Produce the case study of a Metformin patient and impact of the drug? Present the case study of Rick.
+ What industry guidance is followed for Type 2 diabetes mellitus in the USA and in KSA?
  """
 )
 
