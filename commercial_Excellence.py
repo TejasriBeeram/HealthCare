@@ -151,8 +151,6 @@ This demo only reflects Type 2 diabetes market data for **Saudi Arabia diabetes 
 - Metformin
 
 ### 💡 Sample Questions
-- *Sales Representative:*  
-  What industry guidance is followed for Type 2 diabetes mellitus in the USA and in KSA?
 
 - *Market Access Specialist:*  
   Produce the case study of a Metformin patient and impact of the drug? Present the case study of Rick.
@@ -176,7 +174,6 @@ with st.form("chat_form", clear_on_submit=False):
     role = st.radio(
         "",
         [
-            "Sales Representative",
             "Market Access Specialist",
             "Medical Science Liaison (MSL)"
         ],
