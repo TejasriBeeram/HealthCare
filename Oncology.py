@@ -124,22 +124,19 @@ st.write("---")
 # OVERVIEW
 # -----------------------------
 st.markdown(
-    """
-### 📘 Overview
-
-This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams. It is tailored to the lung cancer oncology landscape in England, providing actionable recommendations that help teams prioritise engagement and strategic initiatives.
-The insights are generated through the integration of healthcare and market data, combined with clinical guidance from organisations such as the National Institute for Health and Care Excellence (NICE). All recommendations are governed by predefined business rules to ensure consistency, relevance, and compliance.
-
+        """
 ### ⚠️ Data Scope and Limitations
+
 The analysis is based on **oncology data in England**, specifically focused on **lung cancer**, and includes the following sources:
-- Call Notes Data – Internal
-- Sales Data – Internal
-- Call Activity Data – Internal
-- HCO & HCP Data – NHS sources
-- Healthcare System Assessment Data – Internal and external
-- NICE Guidelines – External
-- Treatment Pathways – Derived from NICE guidelines
-- Formulary Data – Oxfordshire, Northeast London, and NHS England
+
+- Call Notes Data – Internal  
+- Sales Data – Internal  
+- Call Activity Data – Internal  
+- HCO & HCP Data – NHS sources  
+- Healthcare System Assessment Data – Internal and external  
+- NICE Guidelines – External  
+- Treatment Pathways – Derived from NICE guidelines  
+- Formulary Data – Oxfordshire, Northeast London, and NHS England  
 """
 )
 
