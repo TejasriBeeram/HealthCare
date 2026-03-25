@@ -40,36 +40,6 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-bottom: 2rem;
 }
 
-/* QUICK QUESTIONS NEW UI */
-.quick-title {
-    font-size: 28px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-.quick-sub {
-    color: #ef4444;
-    font-size: 14px;
-    margin-bottom: 6px;
-}
-
-.quick-card button {
-    width: 100%;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    padding: 14px;
-    background: #f9fafb;
-    font-weight: 600;
-    text-align: left;
-}
-
-.quick-card button:hover {
-    background: #eef2ff;
-}
-
 [data-testid="stForm"] {
     background: #ffffff;
     padding: 25px;
@@ -100,6 +70,29 @@ button[data-testid="baseButton-primary"]:hover {
     box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
 
+/* Quick question buttons */
+button.quick-btn {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 0.8em 1.5em !important;
+    border-radius: 12px !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
+}
+
+button.quick-btn:hover {
+    background-color: #222222 !important;
+}
+
+/* Role labels in radio buttons */
+.stRadio label {
+    color: #000000 !important;   /* black color */
+    font-size: 16px !important;  /* slightly bigger font */
+    font-weight: 500 !important;
+}
+
 footer {
     visibility: hidden;
 }
@@ -107,7 +100,7 @@ footer {
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# HEADER
+# ALLOT HEADER
 # -----------------------------
 st.markdown("""
 <div style="text-align:center; margin-top:20px;">
@@ -123,7 +116,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# HERO
+# HERO HEADER
 # -----------------------------
 st.markdown("""
 <div style="
@@ -144,46 +137,39 @@ st.markdown("""
 # -----------------------------
 with st.expander("📘 Overview"):
     st.markdown("""
-This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams. It is tailored to the lung cancer oncology landscape in England.
-""")
-    
-with st.expander("🎯 Data Scope"):
-    st.markdown("""
-- Call Notes Data – Internal
-- Sales Data – Internal
-- Call Activity Data – Internal
-- HCO & HCP Data – NHS sources
-- NICE Guidelines – External
+This application delivers Next Best Actions (NBAs) to support pharmaceutical teams.
+
+**Data includes:**
+- Sales, Calls, HCP/HCO
+- NICE Guidelines
+- Treatment pathways
+- Formulary data
 """)
 
 # -----------------------------
-# QUICK QUESTIONS (NEW UI)
+# QUICK QUESTIONS (ROLE AWARE)
 # -----------------------------
-st.markdown('<div class="quick-title">💡 Quick Questions</div>', unsafe_allow_html=True)
+st.markdown("### 💡 Quick Questions")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown('<div class="quick-sub">Key Account Manager</div>', unsafe_allow_html=True)
-    if st.button("📊 Top-performing accounts", key="q1"):
+    if st.button("📊 Top-performing accounts"):
         st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
         st.session_state.role = "Key Account Manager"
 
-    st.markdown('<div class="quick-sub">Medical Science Liaison (MSL)</div>', unsafe_allow_html=True)
-    if st.button("📉 Low engagement HCPs", key="q2"):
+    if st.button("📉 Low engagement HCPs"):
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
-        st.session_state.role = "Medical Science Liaison (MSL)"
+        st.session_state.role = "Key Account Manager"
 
 with col2:
-    st.markdown('<div class="quick-sub">Market Access Representative</div>', unsafe_allow_html=True)
-    if st.button("🏥 Formulary uptake issues", key="q3"):
+    if st.button("🏥 Formulary uptake issues"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
-    st.markdown('<div class="quick-sub">Commercial Director</div>', unsafe_allow_html=True)
-    if st.button("🧪 NICE alignment", key="q4"):
+    if st.button("🧪 NICE alignment"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
-        st.session_state.role = "Commercial Director"
+        st.session_state.role = "Medical Science Liaison (MSL)"
 
 st.write("")
 
@@ -222,7 +208,7 @@ with st.form("chat_form", clear_on_submit=False):
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# PROCESS
+# PROCESS SUBMISSION
 # -----------------------------
 if submitted and prompt.strip():
 
