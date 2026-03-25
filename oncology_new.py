@@ -40,21 +40,19 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-bottom: 2rem;
 }
 
-/* QUICK QUESTIONS NEW UI */
+/* QUICK QUESTIONS */
 .quick-title {
     font-size: 28px;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
     margin-bottom: 10px;
 }
 
+/* ✅ FIXED ROLE TEXT */
 .quick-sub {
-    color: #111827;
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 6px;
+    color: #000000;   /* Force black */
+    font-size: 18px;  /* Increased size */
+    font-weight: 700;
+    margin-bottom: 8px;
 }
 
 .quick-card button {
@@ -112,8 +110,7 @@ footer {
 # -----------------------------
 st.markdown("""
 <div style="text-align:center; margin-top:20px;">
-    <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
-         width="240">
+    <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png" width="240">
     <br><br>
     <a href="https://www.allotltd.com/"
         style="text-decoration:none; font-size:20px; color:#2563eb;">
@@ -141,24 +138,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# OVERVIEW
-# -----------------------------
-with st.expander("📘 Overview"):
-    st.markdown("""
-This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams. It is tailored to the lung cancer oncology landscape in England.
-""")
-    
-with st.expander("🎯 Data Scope"):
-    st.markdown("""
-- Call Notes Data – Internal
-- Sales Data – Internal
-- Call Activity Data – Internal
-- HCO & HCP Data – NHS sources
-- NICE Guidelines – External
-""")
-
-# -----------------------------
-# QUICK QUESTIONS (NEW UI)
+# QUICK QUESTIONS
 # -----------------------------
 st.markdown('<div class="quick-title">💡 Quick Questions</div>', unsafe_allow_html=True)
 
@@ -168,23 +148,25 @@ with col1:
     st.markdown('<div class="quick-sub">Key Account Manager</div>', unsafe_allow_html=True)
     if st.button("📊 Top-performing accounts", key="q1"):
         st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
-    if st.button("📊 High patient potential", key="q1"):
+        st.session_state.role = "Key Account Manager"
+
+    if st.button("📊 High patient potential", key="q2"):
         st.session_state.prompt = "Which HCPs or HCOs show high patient potential but low engagement based on call activity and sales data?"
         st.session_state.role = "Key Account Manager"
 
     st.markdown('<div class="quick-sub">Medical Science Liaison (MSL)</div>', unsafe_allow_html=True)
-    if st.button("📉 Low engagement HCPs", key="q2"):
+    if st.button("📉 Low engagement HCPs", key="q3"):
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
         st.session_state.role = "Medical Science Liaison (MSL)"
 
 with col2:
     st.markdown('<div class="quick-sub">Market Access Representative</div>', unsafe_allow_html=True)
-    if st.button("🏥 Formulary uptake issues", key="q3"):
+    if st.button("🏥 Formulary uptake issues", key="q4"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
     st.markdown('<div class="quick-sub">Commercial Director</div>', unsafe_allow_html=True)
-    if st.button("🧪 NICE alignment", key="q4"):
+    if st.button("🧪 NICE alignment", key="q5"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
         st.session_state.role = "Commercial Director"
 
@@ -225,7 +207,7 @@ with st.form("chat_form", clear_on_submit=False):
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# PROCESS
+# API CALL
 # -----------------------------
 if submitted and prompt.strip():
 
