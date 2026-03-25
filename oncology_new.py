@@ -163,7 +163,6 @@ The analysis is based on oncology data in England, specifically focused on lung 
 # -----------------------------
 with st.expander("🎯 Sample Questions"):
     st.markdown("""
-st.markdown('<div class="quick-title">💡 Sample Questions</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
