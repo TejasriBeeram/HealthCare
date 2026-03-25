@@ -40,17 +40,15 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-bottom: 2rem;
 }
 
-/* QUICK QUESTIONS */
 .quick-title {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 10px;
 }
 
-/* ✅ FIXED ROLE TEXT */
 .quick-sub {
-    color: #000000;   /* Force black */
-    font-size: 18px;  /* Increased size */
+    color: #000000;
+    font-size: 18px;
     font-weight: 700;
     margin-bottom: 8px;
 }
@@ -169,7 +167,7 @@ with col2:
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
-     if st.button("🏥 Formulary comparrision", key="q6"):
+    if st.button("🏥 Formulary comparison", key="q6"):
         st.session_state.prompt = "How do formulary inclusions in Oxfordshire vs Northeast London vs NHS England differ in terms of uptake?"
         st.session_state.role = "Market Access Representative"
 
@@ -177,7 +175,8 @@ with col2:
     if st.button("🧪 NICE alignment", key="q7"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
         st.session_state.role = "Commercial Director"
-    if st.button("🧪 Adopters vs Laggards ", key="q8"):
+
+    if st.button("🧪 Adopters vs Laggards", key="q8"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Commercial Director"
 
@@ -199,20 +198,17 @@ with st.form("chat_form", clear_on_submit=False):
 
     st.subheader("👤 Select your role")
 
+    roles = [
+        "Key Account Manager",
+        "Market Access Representative",
+        "Medical Science Liaison (MSL)",
+        "Commercial Director"
+    ]
+
     role = st.radio(
         "",
-        [
-            "Key Account Manager",
-            "Market Access Representative",
-            "Medical Science Liaison (MSL)",
-            "Commercial Director"
-        ],
-        index=[
-            "Key Account Manager",
-            "Market Access Representative",
-            "Medical Science Liaison (MSL)",
-            "Commercial Director"
-        ].index(st.session_state.role)
+        roles,
+        index=roles.index(st.session_state.role)
     )
 
     submitted = st.form_submit_button("🚀 Get Insight")
@@ -220,48 +216,58 @@ with st.form("chat_form", clear_on_submit=False):
 # -----------------------------
 # API CALL
 # -----------------------------
-if submitted and prompt.strip():
+if submitted:
 
-    with st.spinner("🔍 Analysing oncology data..."):
+    if not prompt.strip():
+        st.warning("Please enter a question before sending.")
+    else:
+        with st.spinner("🔍 Analysing oncology data..."):
 
-        payload = [{"question_type": role, "prompt": prompt}]
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        }
+            payload = [{"question_type": role, "prompt": prompt}]
+            headers = {
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            }
 
-        try:
-            response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
-            response.raise_for_status()
-            data = response.json()
+            try:
+                response = requests.post(
+                    API_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
+                response.raise_for_status()
 
-            if isinstance(data, list) and "Customer_Story" in data[0]:
-                reply = data[0]["Customer_Story"]
-            else:
-                reply = f"Unexpected API response format: {data}"
+                data = response.json()
 
-        except Exception as e:
-            reply = f"⚠️ Error: {e}"
+                if isinstance(data, list) and data and "Customer_Story" in data[0]:
+                    reply = data[0]["Customer_Story"]
+                else:
+                    reply = f"Unexpected API response format: {data}"
 
-    st.markdown("### 💡 Insight")
+            except requests.exceptions.Timeout:
+                reply = "⚠️ Request timed out. Please try again."
+            except requests.exceptions.RequestException as e:
+                reply = f"⚠️ API Error: {e}"
+            except Exception as e:
+                reply = f"⚠️ Unexpected Error: {e}"
 
-    st.markdown(f"""
-    <div style="
-        background:#ffffff;
-        padding:20px;
-        border-radius:14px;
-        border:1px solid #e5e7eb;
-        box-shadow:0 4px 12px rgba(0,0,0,0.04);
-        margin-top:10px;
-    ">
-        <p style="line-height:1.6;">
-            {reply}
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("### 💡 Insight")
 
-elif submitted and not prompt.strip():
-    st.warning("Please enter a question before sending.")
+        st.markdown(f"""
+        <div style="
+            background:#ffffff;
+            padding:20px;
+            border-radius:14px;
+            border:1px solid #e5e7eb;
+            box-shadow:0 4px 12px rgba(0,0,0,0.04);
+            margin-top:10px;
+        ">
+            <p style="line-height:1.6;">
+                {reply}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # -----------------------------
 # FOOTER
