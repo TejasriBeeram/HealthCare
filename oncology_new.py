@@ -40,6 +40,36 @@ html, body, [data-testid="stAppViewContainer"] {
     padding-bottom: 2rem;
 }
 
+/* QUICK QUESTIONS NEW UI */
+.quick-title {
+    font-size: 28px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.quick-sub {
+    color: #ef4444;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.quick-card button {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 14px;
+    background: #f9fafb;
+    font-weight: 600;
+    text-align: left;
+}
+
+.quick-card button:hover {
+    background: #eef2ff;
+}
+
 [data-testid="stForm"] {
     background: #ffffff;
     padding: 25px;
@@ -77,7 +107,7 @@ footer {
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# ALLOT HEADER
+# HEADER
 # -----------------------------
 st.markdown("""
 <div style="text-align:center; margin-top:20px;">
@@ -93,7 +123,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# HERO HEADER
+# HERO
 # -----------------------------
 st.markdown("""
 <div style="
@@ -114,39 +144,46 @@ st.markdown("""
 # -----------------------------
 with st.expander("📘 Overview"):
     st.markdown("""
-This application delivers Next Best Actions (NBAs) to support pharmaceutical teams.
-
-**Data includes:**
-- Sales, Calls, HCP/HCO
-- NICE Guidelines
-- Treatment pathways
-- Formulary data
+This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams. It is tailored to the lung cancer oncology landscape in England.
+""")
+    
+with st.expander("🎯 Data Scope"):
+    st.markdown("""
+- Call Notes Data – Internal
+- Sales Data – Internal
+- Call Activity Data – Internal
+- HCO & HCP Data – NHS sources
+- NICE Guidelines – External
 """)
 
 # -----------------------------
-# QUICK QUESTIONS (ROLE AWARE)
+# QUICK QUESTIONS (NEW UI)
 # -----------------------------
-st.markdown("### 💡 Quick Questions")
+st.markdown('<div class="quick-title">💡 Quick Questions</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("📊 Top-performing accounts"):
+    st.markdown('<div class="quick-sub">Key Account Manager</div>', unsafe_allow_html=True)
+    if st.button("📊 Top-performing accounts", key="q1"):
         st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
         st.session_state.role = "Key Account Manager"
 
-    if st.button("📉 Low engagement HCPs"):
+    st.markdown('<div class="quick-sub">Medical Science Liaison (MSL)</div>', unsafe_allow_html=True)
+    if st.button("📉 Low engagement HCPs", key="q2"):
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
-        st.session_state.role = "Key Account Manager"
+        st.session_state.role = "Medical Science Liaison (MSL)"
 
 with col2:
-    if st.button("🏥 Formulary uptake issues"):
+    st.markdown('<div class="quick-sub">Market Access Representative</div>', unsafe_allow_html=True)
+    if st.button("🏥 Formulary uptake issues", key="q3"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
-    if st.button("🧪 NICE alignment"):
+    st.markdown('<div class="quick-sub">Commercial Director</div>', unsafe_allow_html=True)
+    if st.button("🧪 NICE alignment", key="q4"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
-        st.session_state.role = "Medical Science Liaison (MSL)"
+        st.session_state.role = "Commercial Director"
 
 st.write("")
 
