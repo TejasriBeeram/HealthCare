@@ -159,9 +159,9 @@ The analysis is based on oncology data in England, specifically focused on lung 
 """)
 
 # -----------------------------
-# QUICK QUESTIONS
+# SAMPLE QUESTIONS
 # -----------------------------
-st.markdown('<div class="quick-title">💡 Quick Questions</div>', unsafe_allow_html=True)
+st.markdown('<div class="quick-title">💡 Sample Questions</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
