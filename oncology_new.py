@@ -51,8 +51,9 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 .quick-sub {
-    color: #ef4444;
-    font-size: 14px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 600;
     margin-bottom: 6px;
 }
 
