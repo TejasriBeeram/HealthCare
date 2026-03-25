@@ -141,6 +141,24 @@ The analysis is based on **oncology data in England**, specifically focused on *
 - NICE Guidelines – External  
 - Treatment Pathways – Derived from NICE guidelines  
 - Formulary Data – Oxfordshire, Northeast London, and NHS England  
+
+### 💡 Sample Questions
+- *Key Account Manager:*  
+ •	Which HCPs or HCOs show high patient potential but low engagement based on call activity and sales data?
+ •	What are the top-performing accounts, and what behaviours (calls, messaging) are driving success?
+
+- *Market Access Representative:*  
+  •	Which regions or ICSs show restricted or delayed formulary uptake despite positive guidance from National Institute for Health and Care Excellence?
+  •	How do formulary inclusions in Oxfordshire vs Northeast London vs NHS England differ in terms of uptake?
+
+- *Medical Science Liaison (MSL):*  
+  •	Which HCPs show low alignment with NICE guidelines in treatment decisions?
+  •	Which centres are early adopters vs laggards in new treatment pathways?
+  
+- *Commercial Director:*    
+  •	How effectively are field activities (calls, engagement) translating into sales outcomes?
+  •	What is the ROI of field engagement activities across different account types?
+
 """
 )
 
