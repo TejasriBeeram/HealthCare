@@ -70,29 +70,6 @@ button[data-testid="baseButton-primary"]:hover {
     box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
 
-/* Quick question buttons */
-button.quick-btn {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    padding: 0.8em 1.5em !important;
-    border-radius: 12px !important;
-    margin-bottom: 10px !important;
-    width: 100% !important;
-}
-
-button.quick-btn:hover {
-    background-color: #222222 !important;
-}
-
-/* Role labels in radio buttons */
-.stRadio label {
-    color: #000000 !important;   /* black color */
-    font-size: 16px !important;  /* slightly bigger font */
-    font-weight: 500 !important;
-}
-
 footer {
     visibility: hidden;
 }
@@ -208,7 +185,7 @@ with st.form("chat_form", clear_on_submit=False):
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# PROCESS SUBMISSION
+# PROCESS
 # -----------------------------
 if submitted and prompt.strip():
 
