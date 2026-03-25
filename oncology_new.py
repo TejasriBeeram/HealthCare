@@ -159,25 +159,25 @@ with col1:
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
         st.session_state.role = "Medical Science Liaison (MSL)"
 
-    if st.button("📉 Treatment Pathways", key="q3"):
+    if st.button("📉 Treatment Pathways", key="q4"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Medical Science Liaison (MSL)"
 
 with col2:
     st.markdown('<div class="quick-sub">Market Access Representative</div>', unsafe_allow_html=True)
-    if st.button("🏥 Formulary uptake issues", key="q4"):
+    if st.button("🏥 Formulary uptake issues", key="q5"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
-     if st.button("🏥 Formulary comparrision", key="q4"):
+     if st.button("🏥 Formulary comparrision", key="q6"):
         st.session_state.prompt = "How do formulary inclusions in Oxfordshire vs Northeast London vs NHS England differ in terms of uptake?"
         st.session_state.role = "Market Access Representative"
 
     st.markdown('<div class="quick-sub">Commercial Director</div>', unsafe_allow_html=True)
-    if st.button("🧪 NICE alignment", key="q5"):
+    if st.button("🧪 NICE alignment", key="q7"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
         st.session_state.role = "Commercial Director"
-    if st.button("🧪 Adopters vs Laggards ", key="q5"):
+    if st.button("🧪 Adopters vs Laggards ", key="q8"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Commercial Director"
 
