@@ -168,6 +168,8 @@ with col1:
     st.markdown('<div class="quick-sub">Key Account Manager</div>', unsafe_allow_html=True)
     if st.button("📊 Top-performing accounts", key="q1"):
         st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
+    if st.button("📊 High patient potential", key="q1"):
+        st.session_state.prompt = "Which HCPs or HCOs show high patient potential but low engagement based on call activity and sales data?"
         st.session_state.role = "Key Account Manager"
 
     st.markdown('<div class="quick-sub">Medical Science Liaison (MSL)</div>', unsafe_allow_html=True)
