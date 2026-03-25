@@ -52,11 +52,6 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 15px !important;
 }
 
-/* Radio buttons spacing */
-.stRadio > div {
-    gap: 10px;
-}
-
 /* Button */
 button[data-testid="baseButton-primary"] {
     background: linear-gradient(90deg, #2563eb, #1d4ed8);
@@ -73,10 +68,10 @@ button[data-testid="baseButton-primary"]:hover {
     box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
 
-/* Expander */
-.streamlit-expanderHeader {
-    font-weight: 600;
-    font-size: 16px;
+/* Quick buttons */
+button[kind="secondary"] {
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
 }
 
 /* Footer */
@@ -86,6 +81,25 @@ footer {
 
 </style>
 """, unsafe_allow_html=True)
+
+# -----------------------------
+# ALLOT HEADER (RESTORED)
+# -----------------------------
+st.markdown(
+    """
+    <div style="text-align:center; margin-top:20px;">
+        <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
+             alt="Allot Logo" width="240">
+        <br><br>
+        <a href="https://www.allotltd.com/"
+            style="text-decoration:none; font-size:20px; color:#2563eb; font-weight:500;">
+            www.allotltd.com
+        </a>
+    </div>
+    <hr style="margin-top: 2em; opacity:0.3;">
+    """,
+    unsafe_allow_html=True
+)
 
 # -----------------------------
 # HERO HEADER
@@ -105,32 +119,61 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# COLLAPSIBLE OVERVIEW
+# OVERVIEW (UNCHANGED, JUST COLLAPSIBLE)
 # -----------------------------
-with st.expander("📘 About this tool"):
+with st.expander("📘 Overview"):
     st.markdown("""
 This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams.
 
-**Focus:**
-- Lung cancer oncology in England
-
-**Data Sources:**
-- Call Notes, Sales, Activity Data
-- NHS HCP & HCO data
-- NICE Guidelines
-- Treatment pathways
-- Formulary data (Oxfordshire, NEL, NHS England)
+### Data Scope
+- Call Notes Data – Internal  
+- Sales Data – Internal  
+- Call Activity Data – Internal  
+- HCO & HCP Data – NHS sources  
+- Healthcare System Assessment Data – Internal and external  
+- NICE Guidelines  
+- Treatment Pathways  
+- Formulary Data  
 """)
+
+# -----------------------------
+# SAMPLE QUESTIONS (NEW)
+# -----------------------------
+st.markdown("### 💡 Quick Questions")
+
+col1, col2 = st.columns(2)
+
+if "prompt" not in st.session_state:
+    st.session_state.prompt = ""
+
+with col1:
+    if st.button("📊 Top-performing accounts"):
+        st.session_state.prompt = "What are the top-performing accounts, and what behaviours are driving success?"
+
+    if st.button("📉 Low engagement HCPs"):
+        st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
+
+with col2:
+    if st.button("🏥 Formulary uptake issues"):
+        st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
+
+    if st.button("🧪 NICE alignment"):
+        st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
 
 st.write("")
 
 # -----------------------------
-# INPUT FORM
+# INPUT FORM (UNCHANGED LOGIC)
 # -----------------------------
 with st.form("chat_form", clear_on_submit=False):
 
     st.subheader("💬 Ask a question")
-    prompt = st.text_area("", placeholder="Type your question here...", height=120)
+    prompt = st.text_area(
+        "",
+        value=st.session_state.get("prompt", ""),
+        placeholder="Type your question here...",
+        height=120
+    )
 
     st.subheader("👤 Select your role")
     role = st.radio(
@@ -147,7 +190,7 @@ with st.form("chat_form", clear_on_submit=False):
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# PROCESS
+# PROCESS SUBMISSION (UNCHANGED)
 # -----------------------------
 if submitted and prompt.strip():
 
@@ -173,7 +216,7 @@ if submitted and prompt.strip():
             reply = f"⚠️ Error: {e}"
 
     # -----------------------------
-    # RESPONSE CARD
+    # RESPONSE CARD (IMPROVED UI)
     # -----------------------------
     st.markdown("### 💡 Insight")
 
@@ -196,7 +239,7 @@ elif submitted and not prompt.strip():
     st.warning("Please enter a question before sending.")
 
 # -----------------------------
-# FOOTER
+# FOOTER (UNCHANGED)
 # -----------------------------
 st.markdown("""
 <hr style="margin-top: 3em; opacity:0.2;">
