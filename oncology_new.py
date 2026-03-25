@@ -161,32 +161,34 @@ The analysis is based on oncology data in England, specifically focused on lung 
 # -----------------------------
 # SAMPLE QUESTIONS
 # -----------------------------
+with st.expander("🎯 Sample Questions"):
+    st.markdown("""
 st.markdown('<div class="quick-title">💡 Sample Questions</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown('<div class="quick-sub">Key Account Manager</div>', unsafe_allow_html=True)
-    if st.button("📊 Top-performing accounts", key="q1"):
+    if st.button("📈 Top-performing accounts", key="q1"):
         st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
         st.session_state.role = "Key Account Manager"
 
-    if st.button("📊 High patient potential", key="q2"):
+    if st.button("🧬 High patient potential", key="q2"):
         st.session_state.prompt = "Which HCPs or HCOs show high patient potential but low engagement based on call activity and sales data?"
         st.session_state.role = "Key Account Manager"
 
     st.markdown('<div class="quick-sub">Medical Science Liaison (MSL)</div>', unsafe_allow_html=True)
-    if st.button("📉 Low engagement HCPs", key="q3"):
+    if st.button("🤝❌  Low engagement HCPs", key="q3"):
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
         st.session_state.role = "Medical Science Liaison (MSL)"
 
-    if st.button("📉 Treatment Pathways", key="q4"):
+    if st.button("🚀 vs 🐢  Treatment Pathways", key="q4"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Medical Science Liaison (MSL)"
 
 with col2:
     st.markdown('<div class="quick-sub">Market Access Representative</div>', unsafe_allow_html=True)
-    if st.button("🏥 Formulary uptake issues", key="q5"):
+    if st.button("📋 Formulary uptake issues", key="q5"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
         st.session_state.role = "Market Access Representative"
 
@@ -195,13 +197,14 @@ with col2:
         st.session_state.role = "Market Access Representative"
 
     st.markdown('<div class="quick-sub">Commercial Director</div>', unsafe_allow_html=True)
-    if st.button("🧪 NICE alignment", key="q7"):
+    if st.button("📘 NICE alignment", key="q7"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
         st.session_state.role = "Commercial Director"
 
     if st.button("🧪 Adopters vs Laggards", key="q8"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Commercial Director"
+""")
 
 st.write("")
 
