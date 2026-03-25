@@ -15,26 +15,31 @@ st.set_page_config(
 )
 
 # -----------------------------
+# SESSION STATE
+# -----------------------------
+if "prompt" not in st.session_state:
+    st.session_state.prompt = ""
+
+if "role" not in st.session_state:
+    st.session_state.role = "Key Account Manager"
+
+# -----------------------------
 # MODERN UI CSS
 # -----------------------------
 st.markdown("""
 <style>
-
-/* Background */
 html, body, [data-testid="stAppViewContainer"] {
     background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
     color: #111827;
     font-family: 'Inter', sans-serif;
 }
 
-/* Center layout */
 .block-container {
     max-width: 700px;
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
-/* Form Card */
 [data-testid="stForm"] {
     background: #ffffff;
     padding: 25px;
@@ -43,7 +48,6 @@ html, body, [data-testid="stAppViewContainer"] {
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
 }
 
-/* Inputs */
 .stTextArea textarea {
     background-color: #ffffff !important;
     border-radius: 12px !important;
@@ -52,7 +56,6 @@ html, body, [data-testid="stAppViewContainer"] {
     font-size: 15px !important;
 }
 
-/* Button */
 button[data-testid="baseButton-primary"] {
     background: linear-gradient(90deg, #2563eb, #1d4ed8);
     color: white;
@@ -60,7 +63,6 @@ button[data-testid="baseButton-primary"] {
     padding: 0.7em 1.4em;
     font-weight: 600;
     border: none;
-    transition: all 0.2s ease;
 }
 
 button[data-testid="baseButton-primary"]:hover {
@@ -68,38 +70,27 @@ button[data-testid="baseButton-primary"]:hover {
     box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
 
-/* Quick buttons */
-button[kind="secondary"] {
-    border-radius: 10px !important;
-    border: 1px solid #e5e7eb !important;
-}
-
-/* Footer */
 footer {
     visibility: hidden;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# ALLOT HEADER (RESTORED)
+# ALLOT HEADER
 # -----------------------------
-st.markdown(
-    """
-    <div style="text-align:center; margin-top:20px;">
-        <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
-             alt="Allot Logo" width="240">
-        <br><br>
-        <a href="https://www.allotltd.com/"
-            style="text-decoration:none; font-size:20px; color:#2563eb; font-weight:500;">
-            www.allotltd.com
-        </a>
-    </div>
-    <hr style="margin-top: 2em; opacity:0.3;">
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="text-align:center; margin-top:20px;">
+    <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
+         width="240">
+    <br><br>
+    <a href="https://www.allotltd.com/"
+        style="text-decoration:none; font-size:20px; color:#2563eb;">
+        www.allotltd.com
+    </a>
+</div>
+<hr style="margin-top: 2em; opacity:0.3;">
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # HERO HEADER
@@ -113,69 +104,68 @@ st.markdown("""
     color:white;
     margin-bottom:20px;
 ">
-    <h1 style="margin-bottom:5px;">💬 NBA for Oncology</h1>
-    <p style="opacity:0.9;">Next Best Actions for England Healthcare</p>
+    <h1>💬 NBA for Oncology</h1>
+    <p>Next Best Actions for England Healthcare</p>
 </div>
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# OVERVIEW (UNCHANGED, JUST COLLAPSIBLE)
+# OVERVIEW
 # -----------------------------
 with st.expander("📘 Overview"):
     st.markdown("""
-This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams.
+This application delivers Next Best Actions (NBAs) to support pharmaceutical teams.
 
-### Data Scope
-- Call Notes Data – Internal  
-- Sales Data – Internal  
-- Call Activity Data – Internal  
-- HCO & HCP Data – NHS sources  
-- Healthcare System Assessment Data – Internal and external  
-- NICE Guidelines  
-- Treatment Pathways  
-- Formulary Data  
+**Data includes:**
+- Sales, Calls, HCP/HCO
+- NICE Guidelines
+- Treatment pathways
+- Formulary data
 """)
 
 # -----------------------------
-# SAMPLE QUESTIONS (NEW)
+# QUICK QUESTIONS (ROLE AWARE)
 # -----------------------------
 st.markdown("### 💡 Quick Questions")
 
 col1, col2 = st.columns(2)
 
-if "prompt" not in st.session_state:
-    st.session_state.prompt = ""
-
 with col1:
     if st.button("📊 Top-performing accounts"):
-        st.session_state.prompt = "What are the top-performing accounts, and what behaviours are driving success?"
+        st.session_state.prompt = "What are the top-performing accounts and what behaviours are driving success?"
+        st.session_state.role = "Key Account Manager"
 
     if st.button("📉 Low engagement HCPs"):
         st.session_state.prompt = "Which HCPs show high patient potential but low engagement?"
+        st.session_state.role = "Key Account Manager"
 
 with col2:
     if st.button("🏥 Formulary uptake issues"):
         st.session_state.prompt = "Which regions show delayed formulary uptake despite NICE guidance?"
+        st.session_state.role = "Market Access Representative"
 
     if st.button("🧪 NICE alignment"):
         st.session_state.prompt = "Which HCPs show low alignment with NICE guidelines?"
+        st.session_state.role = "Medical Science Liaison (MSL)"
 
 st.write("")
 
 # -----------------------------
-# INPUT FORM (UNCHANGED LOGIC)
+# INPUT FORM
 # -----------------------------
 with st.form("chat_form", clear_on_submit=False):
 
     st.subheader("💬 Ask a question")
+
     prompt = st.text_area(
         "",
-        value=st.session_state.get("prompt", ""),
+        value=st.session_state.prompt,
         placeholder="Type your question here...",
         height=120
     )
 
     st.subheader("👤 Select your role")
+
     role = st.radio(
         "",
         [
@@ -184,13 +174,18 @@ with st.form("chat_form", clear_on_submit=False):
             "Medical Science Liaison (MSL)",
             "Commercial Director"
         ],
-        index=0
+        index=[
+            "Key Account Manager",
+            "Market Access Representative",
+            "Medical Science Liaison (MSL)",
+            "Commercial Director"
+        ].index(st.session_state.role)
     )
 
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# PROCESS SUBMISSION (UNCHANGED)
+# PROCESS
 # -----------------------------
 if submitted and prompt.strip():
 
@@ -215,9 +210,6 @@ if submitted and prompt.strip():
         except Exception as e:
             reply = f"⚠️ Error: {e}"
 
-    # -----------------------------
-    # RESPONSE CARD (IMPROVED UI)
-    # -----------------------------
     st.markdown("### 💡 Insight")
 
     st.markdown(f"""
@@ -229,7 +221,7 @@ if submitted and prompt.strip():
         box-shadow:0 4px 12px rgba(0,0,0,0.04);
         margin-top:10px;
     ">
-        <p style="line-height:1.6; font-size:15px;">
+        <p style="line-height:1.6;">
             {reply}
         </p>
     </div>
@@ -239,7 +231,7 @@ elif submitted and not prompt.strip():
     st.warning("Please enter a question before sending.")
 
 # -----------------------------
-# FOOTER (UNCHANGED)
+# FOOTER
 # -----------------------------
 st.markdown("""
 <hr style="margin-top: 3em; opacity:0.2;">
