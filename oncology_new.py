@@ -119,7 +119,7 @@ This application delivers Next Best Actions (NBAs) to support pharmaceutical com
 The insights are generated through the integration of healthcare and market data, combined with clinical guidance from organisations such as the National Institute for Health and Care Excellence (NICE). All recommendations are governed by predefined business rules to ensure consistency, relevance, and compliance.
 """)
     
-with st.expander("Data Scope"):
+with st.expander("🎯 Data Scope"):
     st.markdown("""
 The analysis is based on oncology data in England, specifically focused on lung cancer, and includes the following sources:
 - Call Notes Data – Internal
