@@ -117,7 +117,7 @@ st.markdown(
 # -----------------------------
 # PAGE TITLE
 # -----------------------------
-st.markdown("## 💬 **Next Best Action for Oncology in England**")
+st.markdown("## 💬 **Next Best Action for Oncology**")
 st.write("---")
 
 # -----------------------------
@@ -130,7 +130,7 @@ This application delivers Next Best Actions (NBAs) to support pharmaceutical com
 
 The insights are generated through the integration of healthcare and market data, combined with clinical guidance from organisations such as the National Institute for Health and Care Excellence (NICE). All recommendations are governed by predefined business rules to ensure consistency, relevance, and compliance.
 
-### ⚠️ Data Scope and Limitations
+### Data Scope 
 
 The analysis is based on **oncology data in England**, specifically focused on **lung cancer**, and includes the following sources:
 - Call Notes Data – Internal  
@@ -207,7 +207,7 @@ st.markdown(
     """
     <hr style="margin-top: 3em; opacity:0.3;">
     <p style="text-align:center; font-size: 0.9em; color: #777;">
-        © 2025 KSA Commercial Excellence | Powered by Allot Ltd
+        © 2026 NBA Oncology | Powered by Allot Ltd
     </p>
     """,
     unsafe_allow_html=True
