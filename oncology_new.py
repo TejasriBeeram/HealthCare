@@ -136,6 +136,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
+# INFO EXPANDERS (NEW)
+# -----------------------------
+with st.expander("📘 Overview"):
+    st.markdown("""
+This application delivers Next Best Actions (NBAs) to support pharmaceutical commercial, sales, market access, and medical field teams. It is tailored to the lung cancer oncology landscape in England.
+""")
+
+with st.expander("🎯 Data Scope"):
+    st.markdown("""
+- Call Notes Data – Internal  
+- Sales Data – Internal  
+- Call Activity Data – Internal  
+- HCO & HCP Data – NHS sources  
+- NICE Guidelines – External  
+""")
+
+# -----------------------------
 # QUICK QUESTIONS
 # -----------------------------
 st.markdown('<div class="quick-title">💡 Quick Questions</div>', unsafe_allow_html=True)
@@ -205,11 +222,7 @@ with st.form("chat_form", clear_on_submit=False):
         "Commercial Director"
     ]
 
-    role = st.radio(
-        "",
-        roles,
-        index=roles.index(st.session_state.role)
-    )
+    role = st.radio("", roles, index=roles.index(st.session_state.role))
 
     submitted = st.form_submit_button("🚀 Get Insight")
 
