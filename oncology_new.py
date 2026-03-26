@@ -161,10 +161,9 @@ The analysis is based on oncology data in England, specifically focused on lung 
 
 # -----------------------------
 # SAMPLE QUESTIONS
-# -----------------------------    
-st.markdown('<div class="quick-title">💡 Sample Questions</div>', unsafe_allow_html=True)
-
-
+# -----------------------------  
+with st.expander("💡 Sample Questions"):
+    st.markdown("""
 col1, col2 = st.columns(2)
 
 with col1:
@@ -204,7 +203,7 @@ with col2:
     if st.button("🧪 Adopters vs Laggards", key="q8"):
         st.session_state.prompt = "Which centres are early adopters vs laggards in new treatment pathways?"
         st.session_state.role = "Commercial Director"
-
+"")
 st.write("")
 
 # -----------------------------
