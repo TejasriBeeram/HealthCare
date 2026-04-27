@@ -3,158 +3,87 @@ import requests
 import json
 from io import BytesIO
 
-# -----------------------------
-# SAFE IMPORTS (IMPORTANT FIX)
-# -----------------------------
-try:
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet
-    from pptx import Presentation
-    LIBS_AVAILABLE = True
-except ImportError:
-    LIBS_AVAILABLE = False
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from pptx import Presentation
 
 
 # -----------------------------
-# CONFIGURATION
+# CONFIG
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v5%20Task"
 API_KEY = "681vyxaddAuuuJ21FD7LOYVogX7B0dHB"
 
-st.set_page_config(
-    page_title="Commercial Pharma",
-    page_icon="💬",
-    layout="centered"
-)
-
-# -----------------------------
-# PDF GENERATOR
-# -----------------------------
-def create_pdf(text):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer)
-
-    styles = getSampleStyleSheet()
-    story = []
-
-    for line in text.split("\n"):
-        if line.strip():
-            story.append(Paragraph(line, styles["Normal"]))
-            story.append(Spacer(1, 6))
-
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
+st.set_page_config("Commercial Pharma", "💬", layout="centered")
 
 
 # -----------------------------
-# PPT GENERATOR
+# SAFE PPT GENERATOR (EXECUTIVE VERSION)
 # -----------------------------
 def create_ppt(text):
+
     prs = Presentation()
 
-    sections = text.split("\n\n")
+    sections = [s.strip() for s in text.split("\n") if s.strip()]
 
-    for section in sections:
-        slide = prs.slides.add_slide(prs.slide_layouts[1])
-        title = slide.shapes.title
-        content = slide.placeholders[1]
+    # ---------------- TITLE SLIDE ----------------
+    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    slide.shapes.title.text = "Pharmaceutical Next Best Action"
+    slide.placeholders[1].text = "Executive Intelligence Report"
 
-        title.text = "Next Best Action"
-        content.text = section[:1000]
+    # ---------------- EXECUTIVE SUMMARY ----------------
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = "Executive Summary"
 
-    buffer = BytesIO()
-    prs.save(buffer)
-    buffer.seek(0)
-    return buffer
+    summary = sections[:3]
+    slide.placeholders[1].text = " | ".join(summary)[:900]
 
+    # ---------------- KEY INSIGHTS ----------------
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = "Key Insights"
 
-# -----------------------------
-# CSS
-# -----------------------------
-st.markdown("""
-<style>
+    insights = sections[3:6]
+    slide.placeholders[1].text = "\n".join(insights)[:1000]
 
-html, body, [data-testid="stAppViewContainer"] {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-}
+    # ---------------- STRATEGIC ACTIONS ----------------
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = "Strategic Actions"
 
-h1, h2, h3, h4, h5, h6, p, label, span {
-    color: #000 !important;
-}
+    actions = sections[6:9]
+    slide.placeholders[1].text = "\n".join(actions)[:1000]
 
-.stTextArea textarea {
-    color: #000 !important;
-    background-color: #fff !important;
-}
+    # ---------------- FINAL RECOMMENDATION ----------------
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = "Next Best Actions"
 
-.stAlert {
-    background-color: #eef6ff !important;
-}
+    slide.placeholders[1].text = text[:1200]
 
-</style>
-""", unsafe_allow_html=True)
+    return prs
 
 
 # -----------------------------
-# HEADER
+# UI
 # -----------------------------
-st.markdown("""
-<div style="text-align:center;">
-    <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png" width="260">
-    <br><br>
-    <a href="https://www.allotltd.com/" style="font-size:20px;">
-        www.allotltd.com
-    </a>
-</div>
-<hr>
-""", unsafe_allow_html=True)
+st.markdown("## 💬 Next Best Action - Pharma Executive System")
 
 
-# -----------------------------
-# TITLE
-# -----------------------------
-st.markdown("## 💬 Next Best Action for Commercial Pharma")
-st.write("---")
-
-
-# -----------------------------
-# OVERVIEW
-# -----------------------------
-st.markdown("""
-### 📘 Overview
-Saudi Arabia Diabetes Market NBA Generator (Sales / Market Access / MSL)
-""")
-
-st.write("---")
-
-
-# -----------------------------
-# INPUT FORM
-# -----------------------------
-with st.form("chat_form"):
-
-    prompt = st.text_area("Enquiry:", placeholder="Type your question here...", height=110)
+with st.form("form"):
+    prompt = st.text_area("Enter query", height=120)
 
     role = st.radio(
-        "Select role:",
-        [
-            "Sales Representative",
-            "Market Access Specialist",
-            "Medical Science Liaison (MSL)"
-        ]
+        "Role",
+        ["Sales Representative", "Market Access Specialist", "Medical Science Liaison (MSL)"]
     )
 
-    submitted = st.form_submit_button("Send")
+    submit = st.form_submit_button("Generate")
 
 
 # -----------------------------
-# PROCESS REQUEST
+# API CALL
 # -----------------------------
-if submitted and prompt.strip():
+if submit and prompt.strip():
 
-    with st.spinner("Fetching response..."):
+    with st.spinner("Generating Executive NBA..."):
 
         payload = [{"question_type": role, "prompt": prompt}]
         headers = {
@@ -163,70 +92,34 @@ if submitted and prompt.strip():
         }
 
         try:
-            response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
-            response.raise_for_status()
-            data = response.json()
+            res = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+            data = res.json()
 
-            if isinstance(data, list) and "Customer_Story" in data[0]:
-                reply = data[0]["Customer_Story"]
-            else:
-                reply = f"Unexpected API format: {data}"
+            reply = data[0]["Customer_Story"] if isinstance(data, list) else str(data)
 
         except Exception as e:
-            reply = f"⚠️ Error: {e}"
+            reply = str(e)
 
 
     # -----------------------------
     # OUTPUT
     # -----------------------------
-    st.write("---")
-    st.subheader("Response:")
+    st.subheader("Response")
     st.info(reply)
 
 
     # -----------------------------
-    # DOWNLOADS (SAFE CHECK)
+    # PPT DOWNLOAD
     # -----------------------------
-    if LIBS_AVAILABLE:
+    ppt = create_ppt(reply)
 
-        pdf_file = create_pdf(reply)
-        ppt_file = create_ppt(reply)
+    buffer = BytesIO()
+    ppt.save(buffer)
+    buffer.seek(0)
 
-        st.write("---")
-        st.subheader("⬇️ Download Outputs")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.download_button(
-                "📄 Download PDF",
-                pdf_file,
-                file_name="NBA_Report.pdf",
-                mime="application/pdf"
-            )
-
-        with col2:
-            st.download_button(
-                "📊 Download PPT",
-                ppt_file,
-                file_name="NBA_Report.pptx",
-                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            )
-
-    else:
-        st.warning("PDF/PPT features disabled. Install: reportlab, python-pptx")
-
-
-elif submitted and not prompt.strip():
-    st.warning("Please enter a question.")
-
-
-# -----------------------------
-# FOOTER
-# -----------------------------
-st.markdown("""
-<hr>
-<p style="text-align:center; font-size:12px;">
-© 2025 KSA Commercial Excellence | Powered by Allot Ltd
-</p>
-""", unsafe_allow_html=True)
+    st.download_button(
+        "📊 Download Executive PPT",
+        buffer,
+        file_name="Pharma_Executive_NBA.pptx",
+        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
