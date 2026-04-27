@@ -3,9 +3,16 @@ import requests
 import json
 from io import BytesIO
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from pptx import Presentation
+# -----------------------------
+# SAFE IMPORTS (IMPORTANT FIX)
+# -----------------------------
+try:
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    from pptx import Presentation
+    LIBS_AVAILABLE = True
+except ImportError:
+    LIBS_AVAILABLE = False
 
 
 # -----------------------------
@@ -63,7 +70,7 @@ def create_ppt(text):
 
 
 # -----------------------------
-# LIGHT THEME CSS
+# CSS
 # -----------------------------
 st.markdown("""
 <style>
@@ -77,34 +84,9 @@ h1, h2, h3, h4, h5, h6, p, label, span {
     color: #000 !important;
 }
 
-.stTextInput > div > div,
-.stTextArea > div,
-.stSelectbox > div,
-.stRadio > div {
-    background-color: #f8f9fa !important;
-    border: 1px solid #ccc !important;
-    border-radius: 10px !important;
-}
-
 .stTextArea textarea {
     color: #000 !important;
     background-color: #fff !important;
-}
-
-.stTextInput input::placeholder,
-.stTextArea textarea::placeholder {
-    color: #777 !important;
-}
-
-[data-testid="stForm"] {
-    background-color: #f2f2f2 !important;
-    padding: 20px !important;
-    border-radius: 12px !important;
-}
-
-button[data-testid="baseButton-primary"] {
-    background-color: #2563eb !important;
-    color: white !important;
 }
 
 .stAlert {
@@ -118,21 +100,16 @@ button[data-testid="baseButton-primary"] {
 # -----------------------------
 # HEADER
 # -----------------------------
-st.markdown(
-    """
-    <div style="text-align:center; margin-top:20px;">
-        <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
-             width="260">
-        <br><br>
-        <a href="https://www.allotltd.com/"
-            style="font-size:22px; color:#2563eb;">
-            www.allotltd.com
-        </a>
-    </div>
-    <hr>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="text-align:center;">
+    <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png" width="260">
+    <br><br>
+    <a href="https://www.allotltd.com/" style="font-size:20px;">
+        www.allotltd.com
+    </a>
+</div>
+<hr>
+""", unsafe_allow_html=True)
 
 
 # -----------------------------
@@ -147,7 +124,7 @@ st.write("---")
 # -----------------------------
 st.markdown("""
 ### 📘 Overview
-This application offers Next Best Actions (NBA) for pharma teams in the Saudi Arabia diabetes market.
+Saudi Arabia Diabetes Market NBA Generator (Sales / Market Access / MSL)
 """)
 
 st.write("---")
@@ -158,29 +135,26 @@ st.write("---")
 # -----------------------------
 with st.form("chat_form"):
 
-    st.subheader("Enquiry:")
-    prompt = st.text_area("", placeholder="Type your question here...", height=110)
+    prompt = st.text_area("Enquiry:", placeholder="Type your question here...", height=110)
 
-    st.subheader("Select role:")
     role = st.radio(
-        "",
+        "Select role:",
         [
             "Sales Representative",
             "Market Access Specialist",
             "Medical Science Liaison (MSL)"
-        ],
-        index=0
+        ]
     )
 
     submitted = st.form_submit_button("Send")
 
 
 # -----------------------------
-# PROCESS API
+# PROCESS REQUEST
 # -----------------------------
 if submitted and prompt.strip():
 
-    with st.spinner(f"Fetching response for {role}..."):
+    with st.spinner("Fetching response..."):
 
         payload = [{"question_type": role, "prompt": prompt}]
         headers = {
@@ -196,7 +170,7 @@ if submitted and prompt.strip():
             if isinstance(data, list) and "Customer_Story" in data[0]:
                 reply = data[0]["Customer_Story"]
             else:
-                reply = f"Unexpected API response format: {data}"
+                reply = f"Unexpected API format: {data}"
 
         except Exception as e:
             reply = f"⚠️ Error: {e}"
@@ -211,35 +185,40 @@ if submitted and prompt.strip():
 
 
     # -----------------------------
-    # DOWNLOAD FILES
+    # DOWNLOADS (SAFE CHECK)
     # -----------------------------
-    pdf_file = create_pdf(reply)
-    ppt_file = create_ppt(reply)
+    if LIBS_AVAILABLE:
 
-    st.write("---")
-    st.subheader("⬇️ Download Outputs")
+        pdf_file = create_pdf(reply)
+        ppt_file = create_ppt(reply)
 
-    col1, col2 = st.columns(2)
+        st.write("---")
+        st.subheader("⬇️ Download Outputs")
 
-    with col1:
-        st.download_button(
-            label="📄 Download PDF",
-            data=pdf_file,
-            file_name="NBA_Report.pdf",
-            mime="application/pdf"
-        )
+        col1, col2 = st.columns(2)
 
-    with col2:
-        st.download_button(
-            label="📊 Download PPT",
-            data=ppt_file,
-            file_name="NBA_Report.pptx",
-            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        )
+        with col1:
+            st.download_button(
+                "📄 Download PDF",
+                pdf_file,
+                file_name="NBA_Report.pdf",
+                mime="application/pdf"
+            )
+
+        with col2:
+            st.download_button(
+                "📊 Download PPT",
+                ppt_file,
+                file_name="NBA_Report.pptx",
+                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            )
+
+    else:
+        st.warning("PDF/PPT features disabled. Install: reportlab, python-pptx")
 
 
 elif submitted and not prompt.strip():
-    st.warning("Please enter a question before sending.")
+    st.warning("Please enter a question.")
 
 
 # -----------------------------
@@ -247,7 +226,7 @@ elif submitted and not prompt.strip():
 # -----------------------------
 st.markdown("""
 <hr>
-<p style="text-align:center; font-size: 0.9em; color: #777;">
+<p style="text-align:center; font-size:12px;">
 © 2025 KSA Commercial Excellence | Powered by Allot Ltd
 </p>
 """, unsafe_allow_html=True)
