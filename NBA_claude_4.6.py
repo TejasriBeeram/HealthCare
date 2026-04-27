@@ -1,6 +1,12 @@
 import streamlit as st
 import requests
 import json
+from io import BytesIO
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from pptx import Presentation
+
 
 # -----------------------------
 # CONFIGURATION
@@ -15,85 +21,99 @@ st.set_page_config(
 )
 
 # -----------------------------
-# LIGHT THEME CSS (WHITE BACKGROUND)
+# PDF GENERATOR
+# -----------------------------
+def create_pdf(text):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
+
+    styles = getSampleStyleSheet()
+    story = []
+
+    for line in text.split("\n"):
+        if line.strip():
+            story.append(Paragraph(line, styles["Normal"]))
+            story.append(Spacer(1, 6))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+# -----------------------------
+# PPT GENERATOR
+# -----------------------------
+def create_ppt(text):
+    prs = Presentation()
+
+    sections = text.split("\n\n")
+
+    for section in sections:
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        title = slide.shapes.title
+        content = slide.placeholders[1]
+
+        title.text = "Next Best Action"
+        content.text = section[:1000]
+
+    buffer = BytesIO()
+    prs.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+
+# -----------------------------
+# LIGHT THEME CSS
 # -----------------------------
 st.markdown("""
 <style>
 
-/* Global background + text */
 html, body, [data-testid="stAppViewContainer"] {
-    background-color: #ffffff !important;   /* White */
-    color: #000000 !important;              /* Black text */
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }
 
-/* Headings and normal text */
 h1, h2, h3, h4, h5, h6, p, label, span {
     color: #000 !important;
 }
 
-/* Input container styling */
 .stTextInput > div > div,
 .stTextArea > div,
 .stSelectbox > div,
 .stRadio > div {
-    background-color: #f8f9fa !important;  /* Light grey */
+    background-color: #f8f9fa !important;
     border: 1px solid #ccc !important;
     border-radius: 10px !important;
 }
 
-/* Text inside inputs */
-.stTextInput input {
-    color: #000 !important;
-}
-
-/* TEXT AREA */
 .stTextArea textarea {
-    color: #000 !important;             
-    background-color: #fff !important;  
-    border-radius: 10px !important;
+    color: #000 !important;
+    background-color: #fff !important;
 }
 
-/* Placeholder styling */
 .stTextInput input::placeholder,
 .stTextArea textarea::placeholder {
     color: #777 !important;
 }
 
-/* Form container */
 [data-testid="stForm"] {
     background-color: #f2f2f2 !important;
     padding: 20px !important;
     border-radius: 12px !important;
-    border: 1px solid #ddd !important;
 }
 
-/* Primary button */
 button[data-testid="baseButton-primary"] {
     background-color: #2563eb !important;
     color: white !important;
-    border-radius: 8px !important;
-    padding: 0.6em 1.2em !important;
-    border: none !important;
-    font-weight: 500 !important;
 }
 
-button[data-testid="baseButton-primary"]:hover {
-    background-color: #1d4ed8 !important;
-}
-
-/* Info alert box */
 .stAlert {
     background-color: #eef6ff !important;
-    color: #000 !important;
-    border-left: 4px solid #3b82f6 !important;
-}
-
-hr {
-    border-color: #ccc !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
 
 # -----------------------------
 # HEADER
@@ -102,59 +122,41 @@ st.markdown(
     """
     <div style="text-align:center; margin-top:20px;">
         <img src="https://allot.123-web.uk/wp-content/uploads/2018/12/logo-2.png"
-             alt="Allot Logo" width="260">
+             width="260">
         <br><br>
         <a href="https://www.allotltd.com/"
-            style="text-decoration:none; font-size:22px; color:#2563eb; font-weight:500;">
+            style="font-size:22px; color:#2563eb;">
             www.allotltd.com
         </a>
     </div>
-    <hr style="margin-top: 2em; opacity:0.3;">
+    <hr>
     """,
     unsafe_allow_html=True
 )
 
+
 # -----------------------------
-# PAGE TITLE
+# TITLE
 # -----------------------------
-st.markdown("## 💬 **Next Best Action for Commercial Pharma**")
+st.markdown("## 💬 Next Best Action for Commercial Pharma")
 st.write("---")
+
 
 # -----------------------------
 # OVERVIEW
 # -----------------------------
-st.markdown(
-    """
+st.markdown("""
 ### 📘 Overview
-
-This application offers the **Next Best Actions (NBAs)** for commercial, sales, market access, and medical pharmaceutical field teams. It focuses on the diabetes market in the Kingdom of Saudi Arabia(KSA). Analysis of client internal sales, CRM call notes, medical data, together with external in-market policy, healthcare data, recent medical publications, and future health conferences are governed by client specific business rules that control the output.
-
-### ⚠️ Data Limitations
-This demo only reflects **Saudi Arabia diabetes market data**, including:
-- Sales data  
-- HCP profiles  
-- Call notes  
-- Market summaries  
-- Scientific publication data
-
-### 💡 Sample Questions
-- *Sales Representative:*  
-  Analyse call notes data and generate NBA for high-potential prescribers of **Empagliflozin** and explain why?.
-
-- *Market Access Specialist:*  
-  Give me the Market Access Strategy for five hospitals with greatest number of diabetes patients. Consider reimbursement status and the market overview?
-
-- *Medical Science Liaison (MSL):*  
-  Analyze the call notes data for any MSL follow-up requests or complex clinical questions flagged by the Sales Team, or for any KOLs requesting specific data. Generate the 'Next Best Action' (NBA) for each assigned MSL, prioritizing engagements that address complex topics beyond the sales representative’s scope.
-"""
-)
+This application offers Next Best Actions (NBA) for pharma teams in the Saudi Arabia diabetes market.
+""")
 
 st.write("---")
+
 
 # -----------------------------
 # INPUT FORM
 # -----------------------------
-with st.form("chat_form", clear_on_submit=False):
+with st.form("chat_form"):
 
     st.subheader("Enquiry:")
     prompt = st.text_area("", placeholder="Type your question here...", height=110)
@@ -172,12 +174,14 @@ with st.form("chat_form", clear_on_submit=False):
 
     submitted = st.form_submit_button("Send")
 
+
 # -----------------------------
-# PROCESS SUBMISSION
+# PROCESS API
 # -----------------------------
 if submitted and prompt.strip():
 
-    with st.spinner(f"Fetching response for **{role}**..."):
+    with st.spinner(f"Fetching response for {role}..."):
+
         payload = [{"question_type": role, "prompt": prompt}]
         headers = {
             "Authorization": f"Bearer {API_KEY}",
@@ -197,22 +201,53 @@ if submitted and prompt.strip():
         except Exception as e:
             reply = f"⚠️ Error: {e}"
 
+
+    # -----------------------------
+    # OUTPUT
+    # -----------------------------
     st.write("---")
     st.subheader("Response:")
     st.info(reply)
 
+
+    # -----------------------------
+    # DOWNLOAD FILES
+    # -----------------------------
+    pdf_file = create_pdf(reply)
+    ppt_file = create_ppt(reply)
+
+    st.write("---")
+    st.subheader("⬇️ Download Outputs")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.download_button(
+            label="📄 Download PDF",
+            data=pdf_file,
+            file_name="NBA_Report.pdf",
+            mime="application/pdf"
+        )
+
+    with col2:
+        st.download_button(
+            label="📊 Download PPT",
+            data=ppt_file,
+            file_name="NBA_Report.pptx",
+            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+
+
 elif submitted and not prompt.strip():
     st.warning("Please enter a question before sending.")
+
 
 # -----------------------------
 # FOOTER
 # -----------------------------
-st.markdown(
-    """
-    <hr style="margin-top: 3em; opacity:0.3;">
-    <p style="text-align:center; font-size: 0.9em; color: #777;">
-        © 2025 KSA Commercial Excellence | Powered by Allot Ltd
-    </p>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<hr>
+<p style="text-align:center; font-size: 0.9em; color: #777;">
+© 2025 KSA Commercial Excellence | Powered by Allot Ltd
+</p>
+""", unsafe_allow_html=True)
