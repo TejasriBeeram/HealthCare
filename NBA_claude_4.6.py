@@ -3,7 +3,7 @@ import requests
 import json
 from io import BytesIO
 import pandas as pd
-import re
+import numpy as np
 
 # -----------------------------
 # SAFE IMPORTS
@@ -27,12 +27,11 @@ st.set_page_config("Commercial Pharma", "💬", layout="centered")
 
 
 # -----------------------------
-# PDF GENERATOR
+# PDF
 # -----------------------------
 def create_pdf(text):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer)
-
     styles = getSampleStyleSheet()
     story = []
 
@@ -47,15 +46,14 @@ def create_pdf(text):
 
 
 # -----------------------------
-# PPT GENERATOR
+# PPT
 # -----------------------------
 def create_ppt(text):
     prs = Presentation()
-
     sections = [s.strip() for s in text.split("\n") if s.strip()]
 
     slide = prs.slides.add_slide(prs.slide_layouts[0])
-    slide.shapes.title.text = "Pharma Next Best Action"
+    slide.shapes.title.text = "Pharma NBA"
     slide.placeholders[1].text = "Executive Report"
 
     for i, sec in enumerate(sections[:6]):
@@ -70,58 +68,45 @@ def create_ppt(text):
 
 
 # -----------------------------
-# SMART REGION TABLE PARSER
+# 🔥 SMART PARSER (REGION DATA)
 # -----------------------------
-def parse_region_data(text):
+def parse_region(text):
+
+    priority_score = {"🔴": 4, "🟠": 3, "🟡": 2, "🟢": 1}
 
     lines = text.split("\n")
     data = []
 
-    priority_map = {
-        "🔴": 4,
-        "🟠": 3,
-        "🟡": 2,
-        "🟢": 1
-    }
-
     for line in lines:
-        if any(p in line for p in priority_map.keys()):
+        for symbol, score in priority_score.items():
+            if symbol in line and "-" in line:
+                parts = line.split("\t") if "\t" in line else line.split("  ")
 
-            parts = line.split("\t") if "\t" in line else line.split("  ")
+                if len(parts) >= 3:
+                    region = parts[0].strip()
+                    accounts = parts[1].strip()
+                    priority = parts[2].strip()
 
-            if len(parts) >= 3:
-                region = parts[0].strip()
-                accounts = parts[1].strip()
-                priority_raw = parts[2].strip()
+                    data.append({
+                        "Region": region,
+                        "Score": score,
+                        "Accounts": len(accounts.split(","))
+                    })
 
-                score = 0
-                for k, v in priority_map.items():
-                    if k in priority_raw:
-                        score = v
-
-                data.append({
-                    "Region": region,
-                    "Accounts": accounts,
-                    "Priority": priority_raw,
-                    "Score": score
-                })
-
-    if len(data) > 0:
-        return pd.DataFrame(data)
-
-    return None
+    return pd.DataFrame(data) if len(data) > 0 else None
 
 
 # -----------------------------
 # UI
 # -----------------------------
-st.markdown("## 💬 Next Best Action - Commercial Pharma")
+st.markdown("## 💬 Next Best Action - Pharma AI")
+
 
 with st.form("form"):
-    prompt = st.text_area("Enter your query", height=120)
+    prompt = st.text_area("Enter query", height=120)
 
     role = st.radio(
-        "Select Role",
+        "Role",
         ["Sales Representative", "Market Access Specialist", "Medical Science Liaison (MSL)"]
     )
 
@@ -133,7 +118,7 @@ with st.form("form"):
 # -----------------------------
 if submit and prompt.strip():
 
-    with st.spinner("Generating response..."):
+    with st.spinner("Generating..."):
 
         payload = [{"question_type": role, "prompt": prompt}]
         headers = {
@@ -141,73 +126,66 @@ if submit and prompt.strip():
             "Content-Type": "application/json"
         }
 
-        try:
-            res = requests.post(API_URL, headers=headers, data=json.dumps(payload))
-            data = res.json()
+        res = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+        data = res.json()
 
-            reply = data[0]["Customer_Story"] if isinstance(data, list) else str(data)
-
-        except Exception as e:
-            reply = f"Error: {e}"
+        reply = data[0]["Customer_Story"] if isinstance(data, list) else str(data)
 
 
     # -----------------------------
-    # OUTPUT TEXT
+    # TEXT OUTPUT
     # -----------------------------
     st.subheader("Response")
     st.info(reply)
 
 
     # -----------------------------
-    # 📊 REGION CHART
+    # 📊 BAR CHART + 📈 GRAPH VIEW
     # -----------------------------
-    df_regions = parse_region_data(reply)
+    df = parse_region(reply)
 
-    if df_regions is not None:
-        st.subheader("📊 Regional Priority Insights")
+    if df is not None and not df.empty:
 
-        chart_df = df_regions.sort_values("Score", ascending=False)
+        st.subheader("📊 Regional Priority (Bar Chart)")
+        st.bar_chart(df.set_index("Region")["Score"])
 
-        st.bar_chart(
-            chart_df.set_index("Region")["Score"]
-        )
+        st.subheader("📈 Trend View (Line Graph)")
+        df_sorted = df.sort_values("Score")
+        st.line_chart(df_sorted.set_index("Region")["Score"])
 
-        st.dataframe(df_regions)
+        st.subheader("📊 Engagement Impact (Bubble View)")
+        st.scatter_chart(df.set_index("Region")[["Score", "Accounts"]])
 
     else:
-        st.caption("No regional structured data detected.")
+        st.caption("No structured region data found for visualization.")
 
 
     # -----------------------------
     # DOWNLOADS
     # -----------------------------
-    st.subheader("⬇️ Download Reports")
+    st.subheader("⬇️ Downloads")
 
     if LIBS_AVAILABLE:
-        pdf_file = create_pdf(reply)
-        ppt_file = create_ppt(reply)
+
+        pdf = create_pdf(reply)
+        ppt = create_ppt(reply)
 
         col1, col2 = st.columns(2)
 
         with col1:
-            st.download_button(
-                "📄 Download PDF",
-                pdf_file,
-                file_name="NBA_Report.pdf",
-                mime="application/pdf"
-            )
+            st.download_button("📄 PDF", pdf, "NBA.pdf", "application/pdf")
 
         with col2:
             st.download_button(
-                "📊 Download PPT",
-                ppt_file,
-                file_name="Pharma_Executive_NBA.pptx",
-                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                "📊 PPT",
+                ppt,
+                "NBA.pptx",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
             )
 
     else:
-        st.error("PDF/PPT libraries not installed.")
+        st.error("Install reportlab + python-pptx")
 
 
 elif submit and not prompt.strip():
-    st.warning("Please enter a question.")
+    st.warning("Enter a query")
