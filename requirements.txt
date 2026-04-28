@@ -1,4 +1,7 @@
 streamlit
 requests
+pandas
+numpy
+plotly
 reportlab
 python-pptx
