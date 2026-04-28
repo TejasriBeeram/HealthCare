@@ -3,7 +3,7 @@ import requests
 import json
 from io import BytesIO
 import pandas as pd
-import numpy as np
+import re
 
 # -----------------------------
 # SAFE IMPORTS
@@ -32,6 +32,7 @@ st.set_page_config("Commercial Pharma", "💬", layout="centered")
 def create_pdf(text):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer)
+
     styles = getSampleStyleSheet()
     story = []
 
@@ -50,6 +51,7 @@ def create_pdf(text):
 # -----------------------------
 def create_ppt(text):
     prs = Presentation()
+
     sections = [s.strip() for s in text.split("\n") if s.strip()]
 
     # Title Slide
@@ -84,12 +86,34 @@ def create_ppt(text):
 
 
 # -----------------------------
+# AUTO CHART FUNCTION
+# -----------------------------
+def generate_chart_from_text(text):
+    """
+    Extract simple patterns like:
+    Hospital A - 120
+    Clinic B: 95
+    """
+
+    pattern = r'([A-Za-z0-9\s]+)[-:]\s*(\d+)'
+    matches = re.findall(pattern, text)
+
+    if len(matches) >= 2:
+        df = pd.DataFrame(matches, columns=["Category", "Value"])
+        df["Value"] = pd.to_numeric(df["Value"])
+        return df
+
+    return None
+
+
+# -----------------------------
 # UI HEADER
 # -----------------------------
 st.markdown("## 💬 Next Best Action - Commercial Pharma")
 
+
 # -----------------------------
-# FORM
+# INPUT FORM
 # -----------------------------
 with st.form("form"):
     prompt = st.text_area("Enter your query", height=120)
@@ -124,11 +148,24 @@ if submit and prompt.strip():
         except Exception as e:
             reply = f"Error: {e}"
 
+
     # -----------------------------
     # OUTPUT
     # -----------------------------
     st.subheader("Response")
     st.info(reply)
+
+    # -----------------------------
+    # AUTO GRAPH GENERATION
+    # -----------------------------
+    df_chart = generate_chart_from_text(reply)
+
+    if df_chart is not None:
+        st.subheader("📊 Visual Insights")
+        st.bar_chart(df_chart.set_index("Category"))
+    else:
+        st.caption("No structured data found for visualization.")
+
 
     # -----------------------------
     # DOWNLOADS
@@ -160,88 +197,5 @@ if submit and prompt.strip():
         st.error("PDF/PPT libraries not installed. Check requirements.txt.")
 
 
-# -----------------------------
-# 📊 ANALYTICS DASHBOARD
-# -----------------------------
-st.write("---")
-st.header("📊 Pharma Analytics Dashboard")
-
-@st.cache_data
-def load_data():
-    years = list(range(2018, 2025))
-    countries = ["KSA", "UAE", "UK", "USA"]
-
-    data = []
-    for c in countries:
-        base = np.random.randint(50, 100)
-        for y in years:
-            data.append({
-                "Country": c,
-                "Year": y,
-                "Sales": base + np.random.randint(-10, 20)
-            })
-
-    return pd.DataFrame(data)
-
-df = load_data()
-
-# Filters
-min_year = df["Year"].min()
-max_year = df["Year"].max()
-
-from_year, to_year = st.slider(
-    "Select Year Range",
-    min_year,
-    max_year,
-    (min_year, max_year)
-)
-
-countries = df["Country"].unique()
-
-selected_countries = st.multiselect(
-    "Select Markets",
-    countries,
-    default=list(countries)
-)
-
-# Filter data
-filtered_df = df[
-    (df["Country"].isin(selected_countries)) &
-    (df["Year"] >= from_year) &
-    (df["Year"] <= to_year)
-]
-
-# Chart
-st.subheader("📈 Sales Trend")
-st.line_chart(filtered_df, x="Year", y="Sales", color="Country")
-
-# Metrics
-st.subheader("📊 Market Performance")
-
-latest_year = filtered_df["Year"].max()
-prev_year = latest_year - 1
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % 4]
-
-    with col:
-        latest = filtered_df[
-            (filtered_df["Country"] == country) &
-            (filtered_df["Year"] == latest_year)
-        ]["Sales"].values
-
-        prev = filtered_df[
-            (filtered_df["Country"] == country) &
-            (filtered_df["Year"] == prev_year)
-        ]["Sales"].values
-
-        if len(latest) > 0 and len(prev) > 0:
-            growth = latest[0] - prev[0]
-
-            st.metric(
-                label=f"{country} Sales",
-                value=f"{latest[0]}",
-                delta=f"{growth}"
-            )
+elif submit and not prompt.strip():
+    st.warning("Please enter a question.")
