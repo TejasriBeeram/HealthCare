@@ -47,37 +47,21 @@ def create_pdf(text):
 
 
 # -----------------------------
-# EXECUTIVE PPT GENERATOR
+# PPT GENERATOR
 # -----------------------------
 def create_ppt(text):
     prs = Presentation()
 
     sections = [s.strip() for s in text.split("\n") if s.strip()]
 
-    # Title Slide
     slide = prs.slides.add_slide(prs.slide_layouts[0])
     slide.shapes.title.text = "Pharma Next Best Action"
     slide.placeholders[1].text = "Executive Report"
 
-    # Executive Summary
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
-    slide.shapes.title.text = "Executive Summary"
-    slide.placeholders[1].text = " | ".join(sections[:3])[:900]
-
-    # Key Insights
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
-    slide.shapes.title.text = "Key Insights"
-    slide.placeholders[1].text = "\n".join(sections[3:6])[:1000]
-
-    # Strategic Actions
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
-    slide.shapes.title.text = "Strategic Actions"
-    slide.placeholders[1].text = "\n".join(sections[6:9])[:1000]
-
-    # Final Slide
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
-    slide.shapes.title.text = "Next Best Actions"
-    slide.placeholders[1].text = text[:1200]
+    for i, sec in enumerate(sections[:6]):
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        slide.shapes.title.text = f"Insight {i+1}"
+        slide.placeholders[1].text = sec[:800]
 
     buffer = BytesIO()
     prs.save(buffer)
@@ -86,35 +70,53 @@ def create_ppt(text):
 
 
 # -----------------------------
-# AUTO CHART FUNCTION
+# SMART REGION TABLE PARSER
 # -----------------------------
-def generate_chart_from_text(text):
-    """
-    Extract simple patterns like:
-    Hospital A - 120
-    Clinic B: 95
-    """
+def parse_region_data(text):
 
-    pattern = r'([A-Za-z0-9\s]+)[-:]\s*(\d+)'
-    matches = re.findall(pattern, text)
+    lines = text.split("\n")
+    data = []
 
-    if len(matches) >= 2:
-        df = pd.DataFrame(matches, columns=["Category", "Value"])
-        df["Value"] = pd.to_numeric(df["Value"])
-        return df
+    priority_map = {
+        "🔴": 4,
+        "🟠": 3,
+        "🟡": 2,
+        "🟢": 1
+    }
+
+    for line in lines:
+        if any(p in line for p in priority_map.keys()):
+
+            parts = line.split("\t") if "\t" in line else line.split("  ")
+
+            if len(parts) >= 3:
+                region = parts[0].strip()
+                accounts = parts[1].strip()
+                priority_raw = parts[2].strip()
+
+                score = 0
+                for k, v in priority_map.items():
+                    if k in priority_raw:
+                        score = v
+
+                data.append({
+                    "Region": region,
+                    "Accounts": accounts,
+                    "Priority": priority_raw,
+                    "Score": score
+                })
+
+    if len(data) > 0:
+        return pd.DataFrame(data)
 
     return None
 
 
 # -----------------------------
-# UI HEADER
+# UI
 # -----------------------------
 st.markdown("## 💬 Next Best Action - Commercial Pharma")
 
-
-# -----------------------------
-# INPUT FORM
-# -----------------------------
 with st.form("form"):
     prompt = st.text_area("Enter your query", height=120)
 
@@ -150,21 +152,30 @@ if submit and prompt.strip():
 
 
     # -----------------------------
-    # OUTPUT
+    # OUTPUT TEXT
     # -----------------------------
     st.subheader("Response")
     st.info(reply)
 
-    # -----------------------------
-    # AUTO GRAPH GENERATION
-    # -----------------------------
-    df_chart = generate_chart_from_text(reply)
 
-    if df_chart is not None:
-        st.subheader("📊 Visual Insights")
-        st.bar_chart(df_chart.set_index("Category"))
+    # -----------------------------
+    # 📊 REGION CHART
+    # -----------------------------
+    df_regions = parse_region_data(reply)
+
+    if df_regions is not None:
+        st.subheader("📊 Regional Priority Insights")
+
+        chart_df = df_regions.sort_values("Score", ascending=False)
+
+        st.bar_chart(
+            chart_df.set_index("Region")["Score"]
+        )
+
+        st.dataframe(df_regions)
+
     else:
-        st.caption("No structured data found for visualization.")
+        st.caption("No regional structured data detected.")
 
 
     # -----------------------------
@@ -193,8 +204,9 @@ if submit and prompt.strip():
                 file_name="Pharma_Executive_NBA.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
             )
+
     else:
-        st.error("PDF/PPT libraries not installed. Check requirements.txt.")
+        st.error("PDF/PPT libraries not installed.")
 
 
 elif submit and not prompt.strip():
