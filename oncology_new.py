@@ -5,8 +5,8 @@ import json
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
-API_URL = "https://eks-ultra.snaplogic-demo.com/api/1/rest/feed-master/queue/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Oncology%20Task%20ultra"
-API_KEY = st.secrets.get("API_KEY", "8kRnJK5thZG52gNwHoHSNVq5YawZBgk0")
+API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Oncology%20Task"
+API_KEY = st.secrets.get("API_KEY", "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0")
 
 st.set_page_config(
     page_title="NBA for Oncology in England",
