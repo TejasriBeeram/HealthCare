@@ -258,7 +258,7 @@ if submitted:
                     API_URL,
                     headers=headers,
                     json=payload,
-                    timeout=30
+                    timeout=300
                 )
                 response.raise_for_status()
 
