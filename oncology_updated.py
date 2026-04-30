@@ -91,7 +91,7 @@ def call_api(payload, headers):
             API_URL,
             headers=headers,
             json=payload,
-            timeout=90   # ⏱ increased timeout
+            timeout=180   # ⏱ increased timeout
         )
 
         response.raise_for_status()
