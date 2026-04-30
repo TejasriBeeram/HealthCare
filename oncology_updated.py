@@ -117,7 +117,7 @@ if submitted:
     if not prompt.strip():
         st.warning("Please enter a question.")
 
-    elif not API_KEY or API_KEY == "PASTE_YOUR_API_KEY_HERE":
+    elif not API_KEY or API_KEY == "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0":
         st.error("❌ Cannot call API. API key is missing.")
 
     else:
@@ -129,7 +129,7 @@ if submitted:
             }]
 
             headers = {
-                "Authorization": f"Bearer {API_KEY}",
+                "Authorization": f"Bearer {TfPcaLIqmQtm6rWSegetxXVYulQf8WY0}",
                 "Content-Type": "application/json"
             }
 
