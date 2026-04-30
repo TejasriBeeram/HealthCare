@@ -6,7 +6,11 @@ import json
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Oncology%20Task"
-API_KEY = st.secrets.get("API_KEY", "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0"
+
+API_KEY = st.secrets.get("API_KEY")
+if not API_KEY:
+    st.error("API key not found. Please configure it in Streamlit secrets.")
+    st.stop()
 
 st.set_page_config(
     page_title="NBA for Oncology in England",
@@ -132,7 +136,7 @@ It uses internal + external healthcare datasets combined with NICE guidance.
 """)
 
 # -----------------------------
-# DATA SLOT (YOUR DATA PLUG-IN AREA)
+# DATA SLOT
 # -----------------------------
 with st.expander("🧠 Data Integration (Your Custom Data Area)"):
     st.info("This is where you can later plug your own datasets (CSV, DB, APIs).")
@@ -186,8 +190,11 @@ with st.form("chat_form"):
         "Commercial Director"
     ]
 
-    role = st.radio("👤 Select your role", roles,
-                    index=roles.index(st.session_state.role))
+    role = st.radio(
+        "👤 Select your role",
+        roles,
+        index=roles.index(st.session_state.role)
+    )
 
     submitted = st.form_submit_button("🚀 Get Insight")
 
@@ -218,27 +225,30 @@ if submitted:
                     json=payload,
                     timeout=30
                 )
-                response.raise_for_status()
+
+                if response.status_code != 200:
+                    raise Exception(f"API returned {response.status_code}: {response.text}")
+
                 data = response.json()
 
                 # -----------------------------
                 # SAFE RESPONSE PARSING
                 # -----------------------------
-                if isinstance(data, list) and "Customer_Story" in data[0]:
-                    reply = data[0]["Customer_Story"]
+                if isinstance(data, list) and len(data) > 0:
+                    reply = data[0].get("Customer_Story", str(data[0]))
                 elif isinstance(data, dict):
                     reply = data.get("Customer_Story", str(data))
                 else:
                     reply = str(data)
 
             except Exception as e:
-                reply = f"Error calling API: {str(e)}"
+                reply = f"❌ Error calling API: {str(e)}"
 
-        # reset prompt after submit
+        # reset prompt
         st.session_state.prompt = ""
 
         # -----------------------------
-        # OUTPUT (MARKDOWN SAFE)
+        # OUTPUT
         # -----------------------------
         st.markdown("### 💡 Insight")
         st.markdown(
