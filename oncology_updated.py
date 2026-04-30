@@ -1,28 +1,44 @@
 import streamlit as st
 import requests
-import json
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Oncology%20Task"
 
-# Try secrets first, fallback to manual key
+# Try secrets first, fallback
 API_KEY = st.secrets.get("API_KEY", None)
 
-# 👉 PUT YOUR API KEY HERE if you don’t use secrets
+# 👉 If no secrets, paste your key here
 if not API_KEY:
     API_KEY = "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0"
 
-# If still missing, warn user but don't crash
 if not API_KEY or API_KEY == "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0":
-    st.warning("⚠️ API key is missing. Please add it to run API calls.")
+    st.warning("⚠️ API key missing. Add it to enable API calls.")
 
 st.set_page_config(
     page_title="NBA for Oncology in England",
     page_icon="💬",
     layout="centered"
 )
+
+# -----------------------------
+# RETRY SESSION (IMPORTANT)
+# -----------------------------
+def create_session():
+    session = requests.Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=2,  # exponential delay: 2s, 4s, 8s
+        status_forcelist=[429, 500, 502, 503, 504]
+    )
+    adapter = HTTPAdapter(max_retries=retries)
+    session.mount("https://", adapter)
+    return session
+
+session = create_session()
 
 # -----------------------------
 # SESSION STATE
@@ -34,37 +50,10 @@ if "role" not in st.session_state:
     st.session_state.role = "Key Account Manager"
 
 # -----------------------------
-# UI STYLES
+# SIMPLE UI
 # -----------------------------
-st.markdown("""
-<style>
-html, body, [data-testid="stAppViewContainer"] {
-    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
-    color: #111827;
-    font-family: 'Inter', sans-serif;
-}
-.block-container {
-    max-width: 700px;
-    padding-top: 2rem;
-}
-button[data-testid="baseButton-primary"] {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    color: white;
-    border-radius: 10px;
-}
-footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------
-# HEADER
-# -----------------------------
-st.markdown("""
-<div style="text-align:center;">
-    <h1>💬 NBA for Oncology</h1>
-    <p>Next Best Actions for Healthcare</p>
-</div>
-""", unsafe_allow_html=True)
+st.title("💬 NBA for Oncology")
+st.caption("Next Best Actions for Healthcare")
 
 # -----------------------------
 # INPUT FORM
@@ -94,7 +83,34 @@ with st.form("chat_form"):
     submitted = st.form_submit_button("🚀 Get Insight")
 
 # -----------------------------
-# API CALL
+# API CALL FUNCTION
+# -----------------------------
+def call_api(payload, headers):
+    try:
+        response = session.post(
+            API_URL,
+            headers=headers,
+            json=payload,
+            timeout=90   # ⏱ increased timeout
+        )
+
+        response.raise_for_status()
+        return response.json(), None
+
+    except requests.exceptions.Timeout:
+        return None, "⏱️ Request timed out. Backend is slow. Try again."
+
+    except requests.exceptions.ConnectionError:
+        return None, "🌐 Connection error. Check network or API endpoint."
+
+    except requests.exceptions.HTTPError as err:
+        return None, f"⚠️ API returned error: {err}"
+
+    except Exception as e:
+        return None, f"❌ Unexpected error: {str(e)}"
+
+# -----------------------------
+# HANDLE SUBMIT
 # -----------------------------
 if submitted:
 
@@ -105,7 +121,7 @@ if submitted:
         st.error("❌ Cannot call API. API key is missing.")
 
     else:
-        with st.spinner("Analyzing oncology data..."):
+        with st.spinner("⏳ Analyzing oncology data... this may take up to a minute"):
 
             payload = [{
                 "question_type": role,
@@ -117,19 +133,12 @@ if submitted:
                 "Content-Type": "application/json"
             }
 
-            try:
-                response = requests.post(
-                    API_URL,
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
+            data, error = call_api(payload, headers)
 
-                if response.status_code != 200:
-                    raise Exception(f"{response.status_code}: {response.text}")
-
-                data = response.json()
-
+            if error:
+                reply = error
+            else:
+                # Safe parsing
                 if isinstance(data, list) and len(data) > 0:
                     reply = data[0].get("Customer_Story", str(data[0]))
                 elif isinstance(data, dict):
@@ -137,21 +146,15 @@ if submitted:
                 else:
                     reply = str(data)
 
-            except Exception as e:
-                reply = f"❌ API Error: {str(e)}"
-
+        # Output
         st.markdown("### 💡 Insight")
         st.write(reply)
 
-        # reset prompt
+        # Reset prompt
         st.session_state.prompt = ""
 
 # -----------------------------
 # FOOTER
 # -----------------------------
-st.markdown("""
-<hr>
-<p style="text-align:center; font-size: 0.8em;">
-© 2026 NBA Oncology
-</p>
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.caption("© 2026 NBA Oncology")
