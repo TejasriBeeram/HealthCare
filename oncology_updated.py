@@ -19,7 +19,7 @@ if not API_KEY or API_KEY == "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0":
     st.warning("⚠️ API key missing. Add it to enable API calls.")
 
 st.set_page_config(
-    page_title="NBA for Oncology in England",
+    page_title="NBA for Lung Cancer in England",
     page_icon="💬",
     layout="centered"
 )
