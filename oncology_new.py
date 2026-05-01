@@ -9,7 +9,7 @@ API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/p
 API_KEY = st.secrets.get("API_KEY", "TfPcaLIqmQtm6rWSegetxXVYulQf8WY0")
 
 st.set_page_config(
-    page_title="NBA for Oncology in England",
+    page_title="NBA for Lung Cancer in England",
     page_icon="💬",
     layout="centered"
 )
