@@ -130,7 +130,7 @@ st.markdown("""
     color:white;
     margin-bottom:20px;
 ">
-    <h1>💬 NBA for Oncology</h1>
+    <h1>💬 NBA for Lung Cancer</h1>
     <p>Next Best Actions for Healthcare</p>
 </div>
 """, unsafe_allow_html=True)
