@@ -462,7 +462,7 @@ if submitted:
                     API_URL,
                     headers=headers,
                     data=json.dumps(payload),
-                    timeout=300
+                    timeout=600
                 )
                 response.raise_for_status()
                 data = response.json()
