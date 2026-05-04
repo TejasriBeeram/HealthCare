@@ -88,7 +88,11 @@ def extract_json_from_text(text):
     except Exception:
         pass
 
-    match = re.search(r"\{.*\}", str(text), flags=re.DOTALL)
+    text = str(text).strip()
+
+    text = text.replace("```json", "").replace("```", "").strip()
+
+    match = re.search(r"\{.*\}", text, flags=re.DOTALL)
     if match:
         try:
             return json.loads(match.group(0))
@@ -96,6 +100,19 @@ def extract_json_from_text(text):
             return None
 
     return None
+
+
+def safe_numeric_convert(df):
+    df = df.copy()
+
+    for col in df.columns:
+        converted = pd.to_numeric(df[col], errors="coerce")
+
+        # Only replace if at least one value converted successfully
+        if converted.notna().sum() > 0:
+            df[col] = converted
+
+    return df
 
 
 def remove_ascii_charts(text: str) -> str:
@@ -186,7 +203,8 @@ def make_dataframe(data):
         data = parsed if parsed is not None else []
 
     try:
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        return safe_numeric_convert(df)
     except Exception:
         return pd.DataFrame()
 
@@ -206,9 +224,6 @@ def render_dynamic_chart(chart):
     if df.empty or len(df.columns) < 2:
         st.warning(f"No valid data available for chart: {title}")
         return
-
-    for col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors="ignore")
 
     x = chart.get("x", df.columns[0])
     y = chart.get("y", df.columns[1])
@@ -305,6 +320,13 @@ def render_dynamic_chart(chart):
 
         elif chart_type == "heatmap":
             numeric_cols = df.select_dtypes(include="number").columns.tolist()
+
+            if not numeric_cols:
+                st.warning(f"No numeric values available for heatmap: {title}")
+                st.dataframe(df, use_container_width=True, hide_index=True)
+                card_end()
+                return
+
             heat_value = value if value in df.columns else numeric_cols[0]
 
             heat_df = df.pivot_table(
@@ -407,19 +429,16 @@ def call_api(prompt, role):
             "tables": []
         }
 
-    # Case 1: SnapLogic already returns proper fields
     customer_story = result.get("Customer_Story", "")
     charts = result.get("charts", [])
     tables = result.get("tables", [])
 
-    # Case 2: Customer_Story itself is a JSON string
     parsed_story = extract_json_from_text(customer_story)
     if isinstance(parsed_story, dict):
         customer_story = parsed_story.get("Customer_Story", customer_story)
         charts = parsed_story.get("charts", charts)
         tables = parsed_story.get("tables", tables)
 
-    # Case 3: SnapLogic returns whole response under another field
     for key in ["response", "result", "answer", "output"]:
         if key in result:
             parsed = extract_json_from_text(result[key])
