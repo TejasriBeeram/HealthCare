@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 # -----------------------------
-# LIGHT THEME CSS
+# CSS
 # -----------------------------
 st.markdown("""
 <style>
@@ -44,21 +44,13 @@ html, body, [data-testid="stAppViewContainer"] {
 h1, h2, h3 {
     color: #0f172a;
 }
-
-.stDataFrame {
-    border-radius: 12px;
-}
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# CLEAN LLM RESPONSE
+# CLEAN ASCII CHARTS FROM LLM TEXT
 # -----------------------------
 def remove_ascii_charts(text: str) -> str:
-    """
-    Removes ASCII/text charts made with box characters and block bars.
-    Keeps normal paragraphs, headings, and useful explanation.
-    """
     if not text:
         return ""
 
@@ -66,37 +58,35 @@ def remove_ascii_charts(text: str) -> str:
     cleaned_lines = []
     skip_block = False
 
+    section_starters = [
+        "Applied Theory",
+        "Key Findings",
+        "Detailed Response",
+        "Recommendations",
+        "Downloadable Outputs",
+        "Section",
+        "🎓",
+        "🔴",
+        "📋"
+    ]
+
     ascii_chars = ["╔", "╗", "╚", "╝", "║", "═", "█", "▌", "─", "┌", "┐", "└", "┘"]
 
     for line in lines:
         stripped = line.strip()
 
-        # Skip chart titles like "📊 CHART 1..."
         if re.match(r"^📊\s*CHART\s*\d+", stripped, re.IGNORECASE):
             skip_block = True
             continue
 
-        # Start skipping ASCII chart boxes
         if any(ch in stripped for ch in ["╔", "║", "╚"]):
             skip_block = True
             continue
 
-        # Stop skipping when a normal section begins
-        if skip_block and (
-            stripped.startswith("Applied Theory")
-            or stripped.startswith("Key Findings")
-            or stripped.startswith("Detailed Response")
-            or stripped.startswith("Recommendations")
-            or stripped.startswith("Downloadable Outputs")
-            or stripped.startswith("📋")
-            or stripped.startswith("🎓")
-            or stripped.startswith("🔴")
-            or stripped.startswith("Section")
-        ):
+        if skip_block and any(stripped.startswith(s) for s in section_starters):
             skip_block = False
 
         if skip_block:
-            # Continue skipping obvious ASCII chart content
             if (
                 any(ch in stripped for ch in ascii_chars)
                 or re.search(r"\[[█\s▌]+\]", stripped)
@@ -109,7 +99,6 @@ def remove_ascii_charts(text: str) -> str:
 
     cleaned_text = "\n".join(cleaned_lines)
 
-    # Remove leftover "TO GENERATE" blocks if present
     cleaned_text = re.sub(
         r"► TO GENERATE:.*?(?=\n\n|\Z)",
         "",
@@ -140,17 +129,17 @@ def detect_chart_type(prompt: str):
     return "bar"
 
 # -----------------------------
-# SAFE DATAFRAME CREATION
+# DATAFRAME HELPERS
 # -----------------------------
-def make_dataframe(chart_data):
-    if chart_data is None:
+def make_dataframe(raw_data):
+    if raw_data is None:
         return None
 
     try:
-        if isinstance(chart_data, str):
-            chart_data = json.loads(chart_data)
+        if isinstance(raw_data, str):
+            raw_data = json.loads(raw_data)
 
-        df = pd.DataFrame(chart_data)
+        df = pd.DataFrame(raw_data)
 
         if df.empty:
             return None
@@ -160,9 +149,6 @@ def make_dataframe(chart_data):
     except Exception:
         return None
 
-# -----------------------------
-# DEFAULT VISUAL DATA
-# -----------------------------
 def default_market_df():
     return pd.DataFrame({
         "Year": [2024, 2026, 2028, 2030, 2035, 2045],
@@ -229,24 +215,25 @@ def default_hospital_df():
             "Saudi German Hospital Jeddah",
             "King Abdulaziz University Hospital"
         ],
-        "Prescription Volume": [452.04, 425.16, 400.84, 387.26, 378.82, 332.16, 303.74, 279.02, 253.77, 248.29, 232.91, 184.87]
+        "Prescription Volume": [
+            452.04, 425.16, 400.84, 387.26, 378.82, 332.16,
+            303.74, 279.02, 253.77, 248.29, 232.91, 184.87
+        ]
     })
 
 # -----------------------------
 # CHART RENDERING
 # -----------------------------
 def render_chart(chart_type, df, title="Visual Insight"):
-
     if df is None or df.empty:
         st.info("No structured data available for visualization.")
         return
 
     df = df.copy()
 
-    # Convert possible numeric columns
     for col in df.columns:
         if col != df.columns[0]:
-            df[col] = pd.to_numeric(df[col], errors="ignore")
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
@@ -256,82 +243,93 @@ def render_chart(chart_type, df, title="Visual Insight"):
 
     x_col = df.columns[0]
 
-    if chart_type == "line":
-        fig = px.line(
-            df,
-            x=x_col,
-            y=numeric_cols,
-            markers=True,
-            title=title
-        )
-        fig.update_traces(line=dict(width=3))
+    try:
+        if chart_type == "line":
+            fig = px.line(
+                df,
+                x=x_col,
+                y=numeric_cols,
+                markers=True,
+                title=title
+            )
+            fig.update_traces(line=dict(width=3))
 
-    elif chart_type == "pie":
-        value_col = numeric_cols[0] if numeric_cols else df.columns[1]
-        fig = px.pie(
-            df,
-            names=x_col,
-            values=value_col,
-            title=title,
-            hole=0.4
-        )
-
-    elif chart_type == "dual":
-        fig = go.Figure()
-
-        primary_col = numeric_cols[0] if numeric_cols else df.columns[1]
-
-        fig.add_trace(go.Bar(
-            x=df[x_col],
-            y=df[primary_col],
-            name=primary_col
-        ))
-
-        if len(numeric_cols) > 1:
-            secondary_col = numeric_cols[1]
-
-            fig.add_trace(go.Scatter(
-                x=df[x_col],
-                y=df[secondary_col],
-                name=secondary_col,
-                yaxis="y2",
-                mode="lines+markers",
-                line=dict(width=3)
-            ))
-
-            fig.update_layout(
-                yaxis2=dict(
-                    title=secondary_col,
-                    overlaying="y",
-                    side="right"
-                )
+        elif chart_type == "pie":
+            value_col = numeric_cols[0] if numeric_cols else df.columns[1]
+            fig = px.pie(
+                df,
+                names=x_col,
+                values=value_col,
+                title=title,
+                hole=0.4
             )
 
-        fig.update_layout(title=title)
+        elif chart_type == "dual":
+            fig = go.Figure()
 
-    else:
-        y_cols = numeric_cols if numeric_cols else df.columns[1:]
-        fig = px.bar(
-            df,
-            x=x_col,
-            y=y_cols,
-            title=title,
-            barmode="group"
+            if not numeric_cols:
+                st.info("No numeric columns available for chart.")
+                return
+
+            primary_col = numeric_cols[0]
+
+            fig.add_trace(go.Bar(
+                x=df[x_col],
+                y=df[primary_col],
+                name=primary_col
+            ))
+
+            if len(numeric_cols) > 1:
+                secondary_col = numeric_cols[1]
+
+                fig.add_trace(go.Scatter(
+                    x=df[x_col],
+                    y=df[secondary_col],
+                    name=secondary_col,
+                    yaxis="y2",
+                    mode="lines+markers",
+                    line=dict(width=3)
+                ))
+
+                fig.update_layout(
+                    yaxis2=dict(
+                        title=secondary_col,
+                        overlaying="y",
+                        side="right"
+                    )
+                )
+
+            fig.update_layout(title=title)
+
+        else:
+            if not numeric_cols:
+                st.info("No numeric columns available for chart.")
+                return
+
+            fig = px.bar(
+                df,
+                x=x_col,
+                y=numeric_cols,
+                title=title,
+                barmode="group"
+            )
+
+        fig.update_layout(
+            template="plotly_white",
+            height=480,
+            margin=dict(l=30, r=30, t=70, b=40),
+            font=dict(family="Arial, sans-serif", size=13),
+            legend=dict(orientation="h", y=-0.25),
+            title=dict(x=0.02)
         )
 
-    fig.update_layout(
-        template="plotly_white",
-        height=480,
-        margin=dict(l=30, r=30, t=70, b=40),
-        font=dict(family="Arial, sans-serif", size=13),
-        legend=dict(orientation="h", y=-0.25),
-        title=dict(x=0.02)
-    )
+        st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"Chart rendering error: {e}")
 
 # -----------------------------
-# HCP PRIORITY VISUALS
+# DEFAULT DASHBOARD
 # -----------------------------
 def render_hcp_section():
     st.subheader("📋 HCP Priority Matrix")
@@ -356,6 +354,7 @@ def render_hcp_section():
     )
 
     fig.update_traces(textposition="top center")
+
     fig.update_layout(
         template="plotly_white",
         height=520,
@@ -364,14 +363,12 @@ def render_hcp_section():
 
     st.plotly_chart(fig, use_container_width=True)
 
-# -----------------------------
-# DEFAULT DASHBOARD VISUALS
-# -----------------------------
 def render_default_dashboard():
     st.subheader("📊 Market Growth Projection")
     render_chart("dual", default_market_df(), "KSA Diabetes Market Growth Projection")
 
     st.subheader("🏥 Hospital Prescription Volume")
+
     hospital_df = default_hospital_df()
 
     fig = px.bar(
@@ -392,13 +389,10 @@ def render_default_dashboard():
 
     render_hcp_section()
 
-# -----------------------------
-# PDF EXPORT NOTE
-# -----------------------------
 def pdf_export_note():
     st.info(
-        "For clean PDF export: use browser Print → Save as PDF after the charts finish loading. "
-        "This version removes text-based ASCII charts and displays real Plotly charts/tables."
+        "PDF tip: use browser Print → Save as PDF after all charts finish loading. "
+        "This version removes text-based ASCII charts and displays real charts/tables."
     )
 
 # -----------------------------
@@ -426,7 +420,6 @@ st.markdown("## 💬 Next Best Action for Commercial Pharma")
 # INPUT FORM
 # -----------------------------
 with st.form("chat_form"):
-
     prompt = st.text_area("Enquiry:", height=120)
 
     role = st.radio(
@@ -444,14 +437,17 @@ with st.form("chat_form"):
 # PROCESS
 # -----------------------------
 if submitted:
-
     if not prompt.strip():
         st.warning("Please enter a question.")
 
     else:
-        with st.spinner("Fetching response..."):
+        reply = ""
+        chart_data = None
+        table_data = None
 
+        with st.spinner("Fetching response..."):
             payload = [{"question_type": role, "prompt": prompt}]
+
             headers = {
                 "Authorization": f"Bearer {API_KEY}",
                 "Content-Type": "application/json"
@@ -462,8 +458,9 @@ if submitted:
                     API_URL,
                     headers=headers,
                     data=json.dumps(payload),
-                    timeout=120
+                    timeout=300
                 )
+
                 response.raise_for_status()
                 data = response.json()
 
@@ -471,48 +468,55 @@ if submitted:
                     reply = data[0].get("Customer_Story", "No response.")
                     chart_data = data[0].get("chart_data", None)
                     table_data = data[0].get("table_data", None)
+
                 elif isinstance(data, dict):
                     reply = data.get("Customer_Story", "No response.")
                     chart_data = data.get("chart_data", None)
                     table_data = data.get("table_data", None)
+
                 else:
                     reply = "Unexpected API format."
-                    chart_data = None
-                    table_data = None
+
+            except requests.exceptions.Timeout:
+                reply = (
+                    "The API request timed out. The dashboard below is showing fallback visuals. "
+                    "Please try again or check the SnapLogic task runtime."
+                )
 
             except Exception as e:
-                reply = f"Error: {e}"
-                chart_data = None
-                table_data = None
+                reply = f"Error while calling API: {e}"
 
         # -----------------------------
-        # TEXT OUTPUT
+        # RESPONSE TEXT
         # -----------------------------
         st.write("---")
         st.subheader("Response")
 
         cleaned_reply = remove_ascii_charts(reply)
 
-        with st.container():
-            st.markdown('<div class="report-card">', unsafe_allow_html=True)
-            st.markdown(cleaned_reply)
-            st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="report-card">', unsafe_allow_html=True)
+        st.markdown(cleaned_reply)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # -----------------------------
-        # TABLE OUTPUT FROM API
+        # API TABLE
         # -----------------------------
         table_df = make_dataframe(table_data)
 
         if table_df is not None:
             st.subheader("📋 Structured Table")
-            st.dataframe(table_df, use_container_width=True, hide_index=True)
+            st.dataframe(
+                table_df,
+                use_container_width=True,
+                hide_index=True
+            )
 
         # -----------------------------
-        # CHART OUTPUT FROM API
+        # VISUALS
         # -----------------------------
-        chart_df = make_dataframe(chart_data)
-
         st.subheader("📊 Visual Insights")
+
+        chart_df = make_dataframe(chart_data)
 
         if chart_df is not None:
             chart_type = detect_chart_type(prompt)
