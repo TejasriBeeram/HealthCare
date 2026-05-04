@@ -11,6 +11,7 @@ import plotly.express as px
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v5%20Task"
 API_KEY = "681vyxaddAuuuJ21FD7LOYVogX7B0dHB"
+API_TIMEOUT_SECONDS = 600
 
 st.set_page_config(
     page_title="Commercial Pharma",
@@ -110,7 +111,10 @@ def hospital_df():
             "Saudi German Hospital Jeddah",
             "King Abdulaziz University Hospital",
         ],
-        "Prescription Volume": [452.04, 425.16, 400.84, 387.26, 378.82, 332.16, 303.74, 279.02, 253.77, 248.29, 232.91, 184.87],
+        "Prescription Volume": [
+            452.04, 425.16, 400.84, 387.26, 378.82, 332.16,
+            303.74, 279.02, 253.77, 248.29, 232.91, 184.87
+        ],
     })
 
 def market_df():
@@ -162,14 +166,28 @@ def hcp_df():
 
 def category_df():
     return pd.DataFrame({
-        "Category": ["HCP / Researcher", "HCP Clinician", "KOL Professor", "HCP Consultant", "KOL Speaker", "Collaborator"],
+        "Category": [
+            "HCP / Researcher",
+            "HCP Clinician",
+            "KOL Professor",
+            "HCP Consultant",
+            "KOL Speaker",
+            "Collaborator"
+        ],
         "Count": [16, 6, 3, 3, 3, 2],
     })
 
 def cvot_df():
     return pd.DataFrame({
         "Trial": ["SUSTAIN-6", "PIONEER-6", "LEADER", "REWIND", "EXSCEL", "ELIXA"],
-        "Drug": ["Semaglutide inj", "Oral Semaglutide", "Liraglutide", "Dulaglutide", "Exenatide weekly", "Lixisenatide"],
+        "Drug": [
+            "Semaglutide inj",
+            "Oral Semaglutide",
+            "Liraglutide",
+            "Dulaglutide",
+            "Exenatide weekly",
+            "Lixisenatide"
+        ],
         "HR": [0.74, 0.79, 0.87, 0.88, 0.91, 1.02],
         "Low": [0.58, 0.57, 0.78, 0.79, 0.83, 0.89],
         "High": [0.95, 1.11, 0.97, 0.99, 1.00, 1.17],
@@ -185,7 +203,15 @@ def evidence_df():
     return pd.DataFrame({
         "Trial": ["SUSTAIN-6", "SELECT", "SURPASS-2", "LEADER", "EMPA-KIDNEY", "DAPA-HF", "PIONEER-6"],
         "Impact Rating": [5, 4, 4, 4, 5, 4, 4],
-        "Relevance": ["Direct class support", "Expands patient pool", "Competitive threat", "Class support", "Complementary CKD", "Combination therapy", "Oral option"],
+        "Relevance": [
+            "Direct class support",
+            "Expands patient pool",
+            "Competitive threat",
+            "Class support",
+            "Complementary CKD",
+            "Combination therapy",
+            "Oral option"
+        ],
     })
 
 def journey_df():
@@ -204,30 +230,41 @@ def journey_df():
 # -----------------------------
 def split_report_and_remove_ascii(text: str):
     if not text:
-        return "", ""
+        return ""
 
-    # Remove everything from Visual Data Analysis until theory/key findings.
-    pattern = re.compile(
-        r"(Visual Data Analysis.*?)(?=(Theoretical Integration Points|Applied Theory Sections|Key Findings|Detailed Response|Recommendations|$))",
+    cleaned = text
+
+    cleaned = re.sub(
+        r"Visual Data Analysis.*?(?=(Theoretical Integration Points|Applied Theory Sections|Key Findings|Detailed Response|Recommendations|$))",
+        "",
+        cleaned,
         flags=re.DOTALL | re.IGNORECASE
     )
 
-    match = pattern.search(text)
+    cleaned = re.sub(
+        r"📊\s*CHART\s*\d+.*?(?=📊\s*CHART\s*\d+|Theoretical|Applied Theory|Key Findings|Detailed Response|Recommendations|$)",
+        "",
+        cleaned,
+        flags=re.DOTALL | re.IGNORECASE
+    )
 
-    if match:
-        before = text[:match.start()]
-        after = text[match.end():]
-        cleaned = before + "\n\n" + after
-    else:
-        cleaned = text
-
-    # Remove remaining ASCII box/chart blocks.
-    cleaned = re.sub(r"📊\s*CHART\s*\d+.*?(?=📊\s*CHART\s*\d+|Theoretical|Applied Theory|Key Findings|Detailed Response|Recommendations|$)", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
     cleaned = re.sub(r"[┌╔].*?[┘╝]", "", cleaned, flags=re.DOTALL)
-    cleaned = re.sub(r"Downloadable Outputs.*?(?=Recommendations|$)", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
-    cleaned = re.sub(r"📊 Visual Insights.*", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
-    return cleaned.strip(), "visuals_here"
+    cleaned = re.sub(
+        r"Downloadable Outputs.*?(?=Recommendations|$)",
+        "",
+        cleaned,
+        flags=re.DOTALL | re.IGNORECASE
+    )
+
+    cleaned = re.sub(
+        r"📊 Visual Insights.*",
+        "",
+        cleaned,
+        flags=re.DOTALL | re.IGNORECASE
+    )
+
+    return cleaned.strip()
 
 # -----------------------------
 # CHART HELPERS
@@ -240,6 +277,7 @@ def end_card():
 
 def render_kpis():
     c1, c2, c3, c4 = st.columns(4)
+
     cards = [
         ("USD 2B", "Market Size 2024"),
         ("4.27M", "Diabetes Patients 2024"),
@@ -265,9 +303,19 @@ def render_all_visuals():
 
     chart_card("Chart 1: Top Hospital Accounts by Prescription Volume")
     df = hospital_df().sort_values("Prescription Volume", ascending=True)
-    fig = px.bar(df, x="Prescription Volume", y="Hospital", orientation="h", text="Prescription Volume")
+    fig = px.bar(
+        df,
+        x="Prescription Volume",
+        y="Hospital",
+        orientation="h",
+        text="Prescription Volume"
+    )
     fig.update_traces(texttemplate="%{text:.0f}", textposition="outside")
-    fig.update_layout(template="plotly_white", height=560, margin=dict(l=20, r=40, t=20, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        height=560,
+        margin=dict(l=20, r=40, t=20, b=20)
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
@@ -284,7 +332,11 @@ def render_all_visuals():
         size_max=55,
     )
     fig.update_traces(textposition="top center")
-    fig.update_layout(template="plotly_white", height=560, margin=dict(l=20, r=20, t=20, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        height=560,
+        margin=dict(l=20, r=20, t=20, b=20)
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
@@ -307,8 +359,18 @@ def render_all_visuals():
     chart_card("Chart 5: KSA Diabetes Market Growth Projection")
     df = market_df()
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=df["Year"], y=df["Market Size USD Bn"], name="Market Size USD Bn"))
-    fig.add_trace(go.Scatter(x=df["Year"], y=df["Patients Mn"], name="Patients Mn", yaxis="y2", mode="lines+markers"))
+    fig.add_trace(go.Bar(
+        x=df["Year"],
+        y=df["Market Size USD Bn"],
+        name="Market Size USD Bn"
+    ))
+    fig.add_trace(go.Scatter(
+        x=df["Year"],
+        y=df["Patients Mn"],
+        name="Patients Mn",
+        yaxis="y2",
+        mode="lines+markers"
+    ))
     fig.update_layout(
         template="plotly_white",
         height=500,
@@ -337,7 +399,13 @@ def render_all_visuals():
         name="Hazard Ratio"
     ))
     fig.add_vline(x=1.0, line_dash="dash", annotation_text="Neutral HR = 1.0")
-    fig.update_layout(template="plotly_white", height=430, xaxis_title="Hazard Ratio", yaxis_title="", margin=dict(l=20, r=20, t=20, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        height=430,
+        xaxis_title="Hazard Ratio",
+        yaxis_title="",
+        margin=dict(l=20, r=20, t=20, b=20)
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
@@ -349,7 +417,11 @@ def render_all_visuals():
         aspect="auto",
         text_auto=True,
     )
-    fig.update_layout(template="plotly_white", height=420, margin=dict(l=20, r=20, t=20, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        height=420,
+        margin=dict(l=20, r=20, t=20, b=20)
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
@@ -366,52 +438,93 @@ def render_all_visuals():
     with col2:
         chart_card("Chart 9: Scientific Evidence Impact")
         df = evidence_df().sort_values("Impact Rating")
-        fig = px.bar(df, x="Impact Rating", y="Trial", orientation="h", hover_data=["Relevance"])
+        fig = px.bar(
+            df,
+            x="Impact Rating",
+            y="Trial",
+            orientation="h",
+            hover_data=["Relevance"]
+        )
         fig.update_layout(template="plotly_white", height=430)
         st.plotly_chart(fig, use_container_width=True)
         end_card()
 
     chart_card("Chart 10: Top HCPs by Composite Priority Score")
     df = hcp_df().sort_values("Score", ascending=True)
-    fig = px.bar(df, x="Score", y="Name", orientation="h", color="Priority", text="Score")
+    fig = px.bar(
+        df,
+        x="Score",
+        y="Name",
+        orientation="h",
+        color="Priority",
+        text="Score"
+    )
     fig.update_traces(texttemplate="%{text:.1f}", textposition="outside")
-    fig.update_layout(template="plotly_white", height=520, margin=dict(l=20, r=40, t=20, b=20))
+    fig.update_layout(
+        template="plotly_white",
+        height=520,
+        margin=dict(l=20, r=40, t=20, b=20)
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
     chart_card("Chart 11: HCP Priority Action Table")
-    st.dataframe(hcp_df()[["Name", "Patients", "Visits", "Priority", "Action"]], use_container_width=True, hide_index=True)
+    st.dataframe(
+        hcp_df()[["Name", "Patients", "Visits", "Priority", "Action"]],
+        use_container_width=True,
+        hide_index=True
+    )
     end_card()
 
     chart_card("Chart 12: Market Access Pathway")
     pathway = pd.DataFrame({
-        "Step": ["SFDA Approval", "NUPCO Listing", "Etimad Tender", "Hospital P&T", "Private Sector", "PHC Rollout"],
+        "Step": [
+            "SFDA Approval",
+            "NUPCO Listing",
+            "Etimad Tender",
+            "Hospital P&T",
+            "Private Sector",
+            "PHC Rollout"
+        ],
         "Status Score": [100, 100, 75, 90, 65, 85],
     })
     fig = px.line(pathway, x="Step", y="Status Score", markers=True)
     fig.update_traces(line=dict(width=4), marker=dict(size=12))
-    fig.update_layout(template="plotly_white", height=420, yaxis_range=[0, 110])
+    fig.update_layout(
+        template="plotly_white",
+        height=420,
+        yaxis_range=[0, 110]
+    )
     st.plotly_chart(fig, use_container_width=True)
     end_card()
 
 # -----------------------------
-# API HELPERS
+# API
 # -----------------------------
 def call_api(prompt, role):
     payload = [{"question_type": role, "prompt": prompt}]
+
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
 
-    response = requests.post(API_URL, headers=headers, data=json.dumps(payload), timeout=300)
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        data=json.dumps(payload),
+        timeout=API_TIMEOUT_SECONDS
+    )
+
     response.raise_for_status()
     data = response.json()
 
     if isinstance(data, list) and data:
         return data[0].get("Customer_Story", "No response.")
+
     if isinstance(data, dict):
         return data.get("Customer_Story", "No response.")
+
     return "Unexpected API format."
 
 # -----------------------------
@@ -456,21 +569,26 @@ with st.form("chat_form"):
 if submitted:
     if not prompt.strip():
         st.warning("Please enter a question.")
+
     else:
-        with st.spinner("Fetching response..."):
+        with st.spinner(f"Fetching response... this can take up to {API_TIMEOUT_SECONDS} seconds"):
             try:
                 raw_reply = call_api(prompt, role)
+
             except requests.exceptions.Timeout:
-                raw_reply = "The API request timed out. Showing the commercial dashboard visuals with fallback report sections."
+                raw_reply = (
+                    "The API request timed out. This means SnapLogic did not return a response "
+                    f"within {API_TIMEOUT_SECONDS} seconds. Showing the visual dashboard using fallback data."
+                )
+
             except Exception as e:
                 raw_reply = f"Error while calling API: {e}"
 
-        cleaned_reply, _ = split_report_and_remove_ascii(raw_reply)
+        cleaned_reply = split_report_and_remove_ascii(raw_reply)
 
         st.write("---")
         st.subheader("Response")
 
-        # Split at theory/key findings so visuals appear in the middle, not at the end.
         split_match = re.search(
             r"(Theoretical Integration Points|Applied Theory Sections|Key Findings|Detailed Response|Recommendations)",
             cleaned_reply,
@@ -496,7 +614,10 @@ if submitted:
             st.markdown(bottom_text)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        st.info("PDF export tip: open the app in full screen, wait for all charts to load, then use browser Print → Save as PDF.")
+        st.info(
+            "PDF export tip: open the app in full screen, wait for all charts to load, "
+            "then use browser Print → Save as PDF."
+        )
 
 # -----------------------------
 # FOOTER
