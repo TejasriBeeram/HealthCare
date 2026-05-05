@@ -119,6 +119,10 @@ def remove_ascii_charts(text: str) -> str:
     return cleaned.strip()
 
 
+def normalize_title(title: str) -> str:
+    return re.sub(r"\s+", " ", str(title or "").strip()).lower()
+
+
 def chart_card_start(title):
     st.markdown(f"<div class='chart-card'><h3>{title}</h3>", unsafe_allow_html=True)
 
@@ -184,10 +188,6 @@ def make_dataframe(data):
         return safe_numeric_convert(df)
     except Exception:
         return pd.DataFrame()
-
-
-def normalize_title(title: str) -> str:
-    return re.sub(r"\s+", " ", str(title or "").strip()).lower()
 
 # -----------------------------
 # DYNAMIC CHART RENDERER
@@ -390,24 +390,17 @@ def render_report_with_inline_visuals(reply, charts, tables):
 
     flush_buffer()
 
-    remaining_charts = [
-        c for c in charts
-        if isinstance(c, dict) and normalize_title(c.get("title", "")) not in used_charts
-    ]
+    if charts and not used_charts:
+        st.warning(
+            "Charts were returned, but no matching [[CHART:...]] placeholders were found in Customer_Story. "
+            "Add placeholders in SnapLogic where you want charts to appear."
+        )
 
-    remaining_tables = [
-        t for t in tables
-        if isinstance(t, dict) and normalize_title(t.get("title", "")) not in used_tables
-    ]
-
-    if remaining_charts or remaining_tables:
-        st.markdown("## Additional Visuals")
-
-        for chart in remaining_charts:
-            render_dynamic_chart(chart)
-
-        for table in remaining_tables:
-            render_dynamic_table(table)
+    if tables and not used_tables:
+        st.warning(
+            "Tables were returned, but no matching [[TABLE:...]] placeholders were found in Customer_Story. "
+            "Add placeholders in SnapLogic where you want tables to appear."
+        )
 
 # -----------------------------
 # API CALL
