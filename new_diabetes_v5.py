@@ -13,11 +13,7 @@ API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/p
 API_KEY = "681vyxaddAuuuJ21FD7LOYVogX7B0dHB"
 API_TIMEOUT_SECONDS = 600
 
-st.set_page_config(
-    page_title="Commercial Pharma",
-    page_icon="💬",
-    layout="wide"
-)
+st.set_page_config(page_title="Commercial Pharma", page_icon="💬", layout="wide")
 
 # -----------------------------
 # CSS
@@ -28,12 +24,10 @@ html, body, [data-testid="stAppViewContainer"] {
     background-color: #ffffff !important;
     color: #000000 !important;
 }
-
 .block-container {
     max-width: 1250px;
     padding-top: 2rem;
 }
-
 .report-card {
     background: #f8fbff;
     border: 1px solid #dbeafe;
@@ -42,7 +36,6 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 22px;
     line-height: 1.65;
 }
-
 .chart-card, .table-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -51,21 +44,17 @@ html, body, [data-testid="stAppViewContainer"] {
     margin-bottom: 28px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
-
 h1, h2, h3 {
     color: #0f172a;
 }
-
 @media print {
     .stButton, .stTextArea, .stRadio, .stForm {
         display: none !important;
     }
-
     .chart-card, .report-card, .table-card {
         break-inside: avoid;
         page-break-inside: avoid;
     }
-
     [data-testid="stHeader"] {
         display: none;
     }
@@ -88,9 +77,7 @@ def extract_json_from_text(text):
     except Exception:
         pass
 
-    text = str(text).strip()
-
-    text = text.replace("```json", "").replace("```", "").strip()
+    text = str(text).strip().replace("```json", "").replace("```", "").strip()
 
     match = re.search(r"\{.*\}", text, flags=re.DOTALL)
     if match:
@@ -107,8 +94,6 @@ def safe_numeric_convert(df):
 
     for col in df.columns:
         converted = pd.to_numeric(df[col], errors="coerce")
-
-        # Only replace if at least one value converted successfully
         if converted.notna().sum() > 0:
             df[col] = converted
 
@@ -122,13 +107,6 @@ def remove_ascii_charts(text: str) -> str:
     cleaned = str(text)
 
     cleaned = re.sub(
-        r"Visual Data Analysis.*?(?=(Theoretical|Applied Theory|Key Findings|Detailed Response|Recommendations|$))",
-        "",
-        cleaned,
-        flags=re.DOTALL | re.IGNORECASE
-    )
-
-    cleaned = re.sub(
         r"📊\s*CHART\s*\d+.*?(?=📊\s*CHART\s*\d+|Theoretical|Applied Theory|Key Findings|Detailed Response|Recommendations|$)",
         "",
         cleaned,
@@ -137,7 +115,6 @@ def remove_ascii_charts(text: str) -> str:
 
     cleaned = re.sub(r"[┌╔].*?[┘╝]", "", cleaned, flags=re.DOTALL)
     cleaned = re.sub(r"Downloadable Outputs.*", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
-    cleaned = re.sub(r"📊 Visual Insights.*", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
     return cleaned.strip()
 
@@ -208,6 +185,10 @@ def make_dataframe(data):
     except Exception:
         return pd.DataFrame()
 
+
+def normalize_title(title: str) -> str:
+    return re.sub(r"\s+", " ", str(title or "").strip()).lower()
+
 # -----------------------------
 # DYNAMIC CHART RENDERER
 # -----------------------------
@@ -243,40 +224,16 @@ def render_dynamic_chart(chart):
 
     try:
         if chart_type == "bar":
-            fig = px.bar(
-                df,
-                x=x,
-                y=y,
-                color=color if color in df.columns else None,
-                text=y
-            )
+            fig = px.bar(df, x=x, y=y, color=color if color in df.columns else None, text=y)
 
         elif chart_type in ["horizontal_bar", "hbar"]:
-            fig = px.bar(
-                df,
-                x=y,
-                y=x,
-                orientation="h",
-                color=color if color in df.columns else None,
-                text=y
-            )
+            fig = px.bar(df, x=y, y=x, orientation="h", color=color if color in df.columns else None, text=y)
 
         elif chart_type == "line":
-            fig = px.line(
-                df,
-                x=x,
-                y=y,
-                color=color if color in df.columns else None,
-                markers=True
-            )
+            fig = px.line(df, x=x, y=y, color=color if color in df.columns else None, markers=True)
 
         elif chart_type == "pie":
-            fig = px.pie(
-                df,
-                names=x,
-                values=y,
-                hole=0.45
-            )
+            fig = px.pie(df, names=x, values=y, hole=0.45)
 
         elif chart_type in ["scatter", "bubble"]:
             fig = px.scatter(
@@ -285,19 +242,13 @@ def render_dynamic_chart(chart):
                 y=y,
                 size=size if size in df.columns else None,
                 color=color if color in df.columns else None,
-                hover_name=x,
-                text=x
+                hover_name=x if x in df.columns else None,
+                text=chart.get("text") if chart.get("text") in df.columns else None
             )
-            fig.update_traces(textposition="top center")
 
         elif chart_type in ["dual_axis", "dual"]:
             fig = go.Figure()
-
-            fig.add_trace(go.Bar(
-                x=df[x],
-                y=df[y],
-                name=y
-            ))
+            fig.add_trace(go.Bar(x=df[x], y=df[y], name=y))
 
             if secondary_y and secondary_y in df.columns:
                 fig.add_trace(go.Scatter(
@@ -307,14 +258,7 @@ def render_dynamic_chart(chart):
                     mode="lines+markers",
                     yaxis="y2"
                 ))
-
-                fig.update_layout(
-                    yaxis2=dict(
-                        title=secondary_y,
-                        overlaying="y",
-                        side="right"
-                    )
-                )
+                fig.update_layout(yaxis2=dict(title=secondary_y, overlaying="y", side="right"))
 
             fig.update_layout(yaxis=dict(title=y))
 
@@ -328,34 +272,14 @@ def render_dynamic_chart(chart):
                 return
 
             heat_value = value if value in df.columns else numeric_cols[0]
-
-            heat_df = df.pivot_table(
-                index=y,
-                columns=x,
-                values=heat_value,
-                aggfunc="mean"
-            )
-
-            fig = px.imshow(
-                heat_df,
-                aspect="auto",
-                text_auto=True
-            )
+            heat_df = df.pivot_table(index=y, columns=x, values=heat_value, aggfunc="mean")
+            fig = px.imshow(heat_df, aspect="auto", text_auto=True)
 
         elif chart_type == "funnel":
-            fig = px.funnel(
-                df,
-                x=y,
-                y=x
-            )
+            fig = px.funnel(df, x=y, y=x)
 
         elif chart_type == "area":
-            fig = px.area(
-                df,
-                x=x,
-                y=y,
-                color=color if color in df.columns else None
-            )
+            fig = px.area(df, x=x, y=y, color=color if color in df.columns else None)
 
         else:
             fig = px.bar(df, x=x, y=y, text=y)
@@ -384,7 +308,6 @@ def render_dynamic_table(table):
 
     title = table.get("title", "Table")
     data = table.get("data", [])
-
     df = make_dataframe(data)
 
     if df.empty:
@@ -393,6 +316,98 @@ def render_dynamic_table(table):
     table_card_start(title)
     st.dataframe(df, use_container_width=True, hide_index=True)
     card_end()
+
+# -----------------------------
+# INLINE REPORT RENDERER
+# -----------------------------
+def render_report_with_inline_visuals(reply, charts, tables):
+    chart_map = {
+        normalize_title(c.get("title", "")): c
+        for c in charts
+        if isinstance(c, dict) and c.get("title")
+    }
+
+    table_map = {
+        normalize_title(t.get("title", "")): t
+        for t in tables
+        if isinstance(t, dict) and t.get("title")
+    }
+
+    used_charts = set()
+    used_tables = set()
+
+    token_pattern = r"(\[\[CHART:(.*?)\]\]|\[\[TABLE:(.*?)\]\])"
+    parts = re.split(token_pattern, reply, flags=re.DOTALL)
+
+    buffer = ""
+
+    def flush_buffer():
+        nonlocal buffer
+        if buffer.strip():
+            st.markdown('<div class="report-card">', unsafe_allow_html=True)
+            st.markdown(buffer.strip())
+            st.markdown('</div>', unsafe_allow_html=True)
+            buffer = ""
+
+    for part in parts:
+        if not part or not str(part).strip():
+            continue
+
+        part = str(part).strip()
+
+        if part.startswith("[[CHART:"):
+            flush_buffer()
+            title = part.replace("[[CHART:", "").replace("]]", "").strip()
+            key = normalize_title(title)
+            chart = chart_map.get(key)
+
+            if chart:
+                render_dynamic_chart(chart)
+                used_charts.add(key)
+            else:
+                st.warning(f"Chart placeholder found but chart data missing: {title}")
+
+        elif part.startswith("[[TABLE:"):
+            flush_buffer()
+            title = part.replace("[[TABLE:", "").replace("]]", "").strip()
+            key = normalize_title(title)
+            table = table_map.get(key)
+
+            if table:
+                render_dynamic_table(table)
+                used_tables.add(key)
+            else:
+                st.warning(f"Table placeholder found but table data missing: {title}")
+
+        elif part.startswith("CHART:") or part.startswith("TABLE:"):
+            continue
+
+        elif normalize_title(part) in chart_map or normalize_title(part) in table_map:
+            continue
+
+        else:
+            buffer += "\n\n" + part
+
+    flush_buffer()
+
+    remaining_charts = [
+        c for c in charts
+        if isinstance(c, dict) and normalize_title(c.get("title", "")) not in used_charts
+    ]
+
+    remaining_tables = [
+        t for t in tables
+        if isinstance(t, dict) and normalize_title(t.get("title", "")) not in used_tables
+    ]
+
+    if remaining_charts or remaining_tables:
+        st.markdown("## Additional Visuals")
+
+        for chart in remaining_charts:
+            render_dynamic_chart(chart)
+
+        for table in remaining_tables:
+            render_dynamic_table(table)
 
 # -----------------------------
 # API CALL
@@ -423,11 +438,7 @@ def call_api(prompt, role):
     elif isinstance(data, dict):
         result = data
     else:
-        return {
-            "Customer_Story": "Unexpected API format.",
-            "charts": [],
-            "tables": []
-        }
+        return {"Customer_Story": "Unexpected API format.", "charts": [], "tables": []}
 
     customer_story = result.get("Customer_Story", "")
     charts = result.get("charts", [])
@@ -525,42 +536,7 @@ if submitted:
         st.write("---")
         st.subheader("Response")
 
-        split_match = re.search(
-            r"(Visual Data Analysis|Charts|Chart Analysis|Key Findings|Detailed Response|Recommendations|Applied Theory Sections|Theoretical Integration Points)",
-            reply,
-            flags=re.IGNORECASE
-        )
-
-        if split_match:
-            top_text = reply[:split_match.start()].strip()
-            bottom_text = reply[split_match.start():].strip()
-        else:
-            top_text = reply
-            bottom_text = ""
-
-        if top_text:
-            st.markdown('<div class="report-card">', unsafe_allow_html=True)
-            st.markdown(top_text)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        if charts:
-            st.markdown("## 📊 Visual Data Analysis")
-            for chart in charts:
-                render_dynamic_chart(chart)
-        else:
-            st.warning(
-                "No structured chart data was returned. Check that SnapLogic returns `charts` as a JSON array."
-            )
-
-        if tables:
-            st.markdown("## 📋 Tables")
-            for table in tables:
-                render_dynamic_table(table)
-
-        if bottom_text:
-            st.markdown('<div class="report-card">', unsafe_allow_html=True)
-            st.markdown(bottom_text)
-            st.markdown('</div>', unsafe_allow_html=True)
+        render_report_with_inline_visuals(reply, charts, tables)
 
         st.info(
             "PDF export tip: open the app in full screen, wait for charts to load, "
