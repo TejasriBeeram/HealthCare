@@ -129,7 +129,7 @@ st.markdown(
 
 This application offers the **Next Best Actions (NBAs)** for commercial, sales, market access, and medical pharmaceutical field teams. It focuses on the diabetes market in the Kingdom of Saudi Arabia(KSA). Analysis of client internal sales, CRM call notes, medical data, together with external in-market policy, healthcare data, recent medical publications, and future health conferences are governed by client specific business rules that control the output.
 
-### ⚠️ Data Limitations
+### 🎯 Data Scope
 This demo only reflects **Saudi Arabia diabetes market data**, including:
 - Sales data  
 - HCP profiles  
