@@ -760,7 +760,43 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("## 💬 Next Best Action for Commercial Pharma")
+# -----------------------------
+# PAGE TITLE
+# -----------------------------
+st.markdown("## 💬 **Next Best Action for Commercial Pharma**")
+st.write("---")
+
+# -----------------------------
+# OVERVIEW
+# -----------------------------
+st.markdown(
+    """
+### 📘 Overview
+
+This application offers the **Next Best Actions (NBAs)** for commercial, sales, market access, and medical pharmaceutical field teams. It focuses on the diabetes market in the Kingdom of Saudi Arabia(KSA). Analysis of client internal sales, CRM call notes, medical data, together with external in-market policy, healthcare data, recent medical publications, and future health conferences are governed by client specific business rules that control the output.
+
+### 🎯 Data Scope
+This demo only reflects **Saudi Arabia diabetes market data**, including:
+- Sales data  
+- HCP profiles  
+- Call notes  
+- Market summaries  
+- Scientific publication data
+
+### 💡 Sample Questions
+- *Sales Representative:*  
+  Analyse call notes data and generate NBA for high-potential prescribers of **Empagliflozin** and explain why?.
+
+- *Market Access Specialist:*  
+  Give me the Market Access Strategy for five hospitals with greatest number of diabetes patients. Consider reimbursement status and the market overview?
+
+- *Medical Science Liaison (MSL):*  
+  Analyze the call notes data for any MSL follow-up requests or complex clinical questions flagged by the Sales Team, or for any KOLs requesting specific data. Generate the 'Next Best Action' (NBA) for each assigned MSL, prioritizing engagements that address complex topics beyond the sales representative’s scope.
+"""
+)
+
+st.write("---")
+
 
 # -----------------------------
 # INPUT FORM
