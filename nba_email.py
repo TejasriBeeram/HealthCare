@@ -21,7 +21,7 @@ if "prompt" not in st.session_state:
     st.session_state.prompt = ""
 
 if "role" not in st.session_state:
-    st.session_state.role = "Key Account Manager"
+    st.session_state.role = "Sales Representative"
 
 # -----------------------------
 # UI
@@ -30,7 +30,11 @@ st.title("Commercial Pharma Assistant")
 
 role = st.selectbox(
     "Select Role",
-    ["Key Account Manager", "Sales Manager", "Marketing Manager"],
+    [
+        "Sales Representative",
+        "Market Access Specialist",
+        "Medical Science Liaison (MSL)"
+    ],
     index=0
 )
 
