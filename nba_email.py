@@ -5,8 +5,8 @@ import json
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
-API_URL = "YOUR_SNAPLOGIC_TRIGGERED_TASK_URL"
-API_KEY = "YOUR_API_KEY"
+API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v6%20Task"
+API_KEY = "PROhgIoeBKE5pokEZmM3xHAlWUZs8sxD"
 
 st.set_page_config(
     page_title="Commercial Pharma",
