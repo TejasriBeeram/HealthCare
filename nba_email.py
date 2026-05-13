@@ -79,14 +79,13 @@ if st.button("Generate Output and Send Emails"):
         st.warning("Please enter at least one recipient email address.")
         st.stop()
 
-    # Convert multiple emails into a proper list
     email_list = [
-        email.strip()
-        for email in emails.replace("\n", ",").split(",")
-        if email.strip()
+        e.strip()
+        for e in emails.replace("\n", ",").split(",")
+        if e.strip()
     ]
 
-    if len(email_list) == 0:
+    if not email_list:
         st.warning("Please enter valid email addresses.")
         st.stop()
 
@@ -103,10 +102,6 @@ if st.button("Generate Output and Send Emails"):
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
     }
-
-    # Show payload for testing
-    with st.expander("Debug Payload"):
-        st.json(payload)
 
     # -----------------------------
     # API CALL
@@ -134,68 +129,62 @@ if st.button("Generate Output and Send Emails"):
                 result = response.text
 
             # -----------------------------
-            # HANDLE LIST RESPONSE
+            # EXTRACT OUTPUT PROPERLY
             # -----------------------------
+            output = None
+
             if isinstance(result, list):
-
                 if len(result) > 0:
-
                     first_item = result[0]
 
                     if isinstance(first_item, dict):
-
                         output = (
-                            first_item.get("response")
+                            first_item.get("Customer_Story")
+                            or first_item.get("response")
                             or first_item.get("output")
                             or first_item.get("answer")
                             or first_item.get("content")
                             or first_item
                         )
-
                     else:
                         output = first_item
-
                 else:
                     output = "No output returned."
 
-            # -----------------------------
-            # HANDLE DICTIONARY RESPONSE
-            # -----------------------------
             elif isinstance(result, dict):
-
                 output = (
-                    result.get("response")
+                    result.get("Customer_Story")
+                    or result.get("response")
                     or result.get("output")
                     or result.get("answer")
                     or result.get("content")
                     or result
                 )
 
-            # -----------------------------
-            # HANDLE STRING RESPONSE
-            # -----------------------------
             else:
                 output = result
 
             # -----------------------------
-            # DISPLAY OUTPUT
+            # DISPLAY OUTPUT PROPERLY
             # -----------------------------
             st.subheader("Generated Output")
 
-            if isinstance(output, dict):
+            if isinstance(output, str):
+                st.markdown(output, unsafe_allow_html=True)
+
+            elif isinstance(output, dict):
                 st.json(output)
 
             elif isinstance(output, list):
                 st.json(output)
 
             else:
-                st.markdown(str(output))
+                st.write(output)
 
         # -----------------------------
         # API ERROR
         # -----------------------------
         else:
-
             st.error(f"API Error: {response.status_code}")
             st.write(response.text)
 
@@ -203,7 +192,6 @@ if st.button("Generate Output and Send Emails"):
     # TIMEOUT ERROR
     # -----------------------------
     except requests.exceptions.Timeout:
-
         st.error(
             "Request timed out. Please increase timeout or optimise the SnapLogic pipeline."
         )
@@ -212,5 +200,4 @@ if st.button("Generate Output and Send Emails"):
     # GENERAL ERROR
     # -----------------------------
     except Exception as e:
-
         st.error(f"Error: {e}")
