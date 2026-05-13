@@ -6,8 +6,7 @@ import json
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v6%20Task"
-API_KEY = "rdYvA7JMefys1fqzMnakjxvHuVVAhOBe"
-
+API_KEY = "PROhgIoeBKE5pokEZmM3xHAlWUZs8sxD"
 
 st.set_page_config(
     page_title="Commercial Pharma",
@@ -45,10 +44,12 @@ role = st.selectbox(
 st.session_state.role = role
 
 # -----------------------------
-# EMAIL INPUT
+# MULTIPLE EMAIL INPUT
 # -----------------------------
-email = st.text_input(
-    "Enter recipient email address"
+emails = st.text_area(
+    "Enter recipient email addresses",
+    placeholder="example1@email.com, example2@email.com\nor enter one email per line",
+    height=100
 )
 
 # -----------------------------
@@ -65,7 +66,7 @@ st.session_state.prompt = user_prompt
 # -----------------------------
 # SUBMIT BUTTON
 # -----------------------------
-if st.button("Generate Output and Send Email"):
+if st.button("Generate Output and Send Emails"):
 
     # -----------------------------
     # VALIDATIONS
@@ -74,8 +75,19 @@ if st.button("Generate Output and Send Email"):
         st.warning("Please enter your prompt.")
         st.stop()
 
-    if not email.strip():
-        st.warning("Please enter recipient email address.")
+    if not emails.strip():
+        st.warning("Please enter at least one recipient email address.")
+        st.stop()
+
+    # Convert multiple emails into a proper list
+    email_list = [
+        email.strip()
+        for email in emails.replace("\n", ",").split(",")
+        if email.strip()
+    ]
+
+    if len(email_list) == 0:
+        st.warning("Please enter valid email addresses.")
         st.stop()
 
     # -----------------------------
@@ -84,7 +96,7 @@ if st.button("Generate Output and Send Email"):
     payload = {
         "question_type": st.session_state.role,
         "prompt": st.session_state.prompt,
-        "email": email
+        "emails": email_list
     }
 
     headers = {
@@ -92,11 +104,15 @@ if st.button("Generate Output and Send Email"):
         "Content-Type": "application/json"
     }
 
+    # Show payload for testing
+    with st.expander("Debug Payload"):
+        st.json(payload)
+
     # -----------------------------
     # API CALL
     # -----------------------------
     try:
-        with st.spinner("Generating output and sending email..."):
+        with st.spinner("Generating output and sending emails..."):
 
             response = requests.post(
                 API_URL,
@@ -110,9 +126,12 @@ if st.button("Generate Output and Send Email"):
         # -----------------------------
         if response.status_code == 200:
 
-            result = response.json()
+            st.success(f"Output generated and sent to {len(email_list)} email(s).")
 
-            st.success("Output generated and email sent successfully.")
+            try:
+                result = response.json()
+            except ValueError:
+                result = response.text
 
             # -----------------------------
             # HANDLE LIST RESPONSE
@@ -186,8 +205,7 @@ if st.button("Generate Output and Send Email"):
     except requests.exceptions.Timeout:
 
         st.error(
-            "Request timed out. "
-            "Please increase timeout or optimise the SnapLogic pipeline."
+            "Request timed out. Please increase timeout or optimise the SnapLogic pipeline."
         )
 
     # -----------------------------
