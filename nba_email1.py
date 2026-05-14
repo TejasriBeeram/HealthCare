@@ -34,20 +34,20 @@ if "matched_block" not in st.session_state:
 # HELPER FUNCTIONS
 # -----------------------------
 def extract_output(result):
-    if isinstance(result, list):
-        if len(result) > 0:
-            first_item = result[0]
-            if isinstance(first_item, dict):
-                return (
-                    first_item.get("Customer_Story")
-                    or first_item.get("response")
-                    or first_item.get("output")
-                    or first_item.get("answer")
-                    or first_item.get("content")
-                    or str(first_item)
-                )
-            return str(first_item)
-        return "No output returned."
+    if isinstance(result, list) and len(result) > 0:
+        first_item = result[0]
+
+        if isinstance(first_item, dict):
+            return (
+                first_item.get("Customer_Story")
+                or first_item.get("response")
+                or first_item.get("output")
+                or first_item.get("answer")
+                or first_item.get("content")
+                or str(first_item)
+            )
+
+        return str(first_item)
 
     if isinstance(result, dict):
         return (
@@ -63,7 +63,7 @@ def extract_output(result):
 
 
 def normalize_text(text):
-    text = text.lower()
+    text = str(text).lower()
     text = re.sub(r"<[^>]+>", " ", text)
     text = text.replace("—", "-").replace("–", "-")
     text = re.sub(r"\s+", " ", text)
@@ -72,68 +72,82 @@ def normalize_text(text):
 
 def find_section_by_heading(full_output, search_heading):
     """
-    Finds the section that starts with the heading typed by user.
-    Sends from that heading until the next major heading.
+    Finds a section by typed heading and keeps original HTML formatting,
+    including tables.
     """
 
     if not full_output or not search_heading:
         return None
 
-    text = str(full_output)
+    html = str(full_output)
 
-    # Remove common HTML tags for matching, but keep original content for sending
-    plain_text = re.sub(r"<[^>]+>", "", text)
-
+    # Find heading in original HTML
     search_norm = normalize_text(search_heading)
-    plain_norm = normalize_text(plain_text)
 
-    if search_norm not in plain_norm:
-        return None
-
-    # Find approximate position in original plain text
-    lines = plain_text.splitlines()
-
-    start_index = None
-
-    for i, line in enumerate(lines):
-        if search_norm in normalize_text(line):
-            start_index = i
-            break
-
-    if start_index is None:
-        return None
-
-    heading_patterns = [
-        r"^High-Potential Empagliflozin Prescriber Identification",
-        r"^Clinical Evidence Foundation",
-        r"^Next Best Action Plan",
-        r"^NBA\s*\d+\s*:",
-        r"^Territory-Level Institutional Priority Summary",
-        r"^Cross-Cutting NBA Themes",
-        r"^Theme\s*\d+\s*:",
-        r"^Summary NBA Priority Matrix",
-        r"^Methodology:",
-        r"^Overview",
-        r"^Objective:"
-    ]
-
-    combined_heading_pattern = re.compile(
-        "|".join(heading_patterns),
-        re.IGNORECASE
+    # Split HTML into blocks using headings such as h1, h2, h3, p, table, etc.
+    section_start_pattern = re.compile(
+        r"(?=("
+        r"<h[1-6][^>]*>.*?</h[1-6]>"
+        r"|<p[^>]*>.*?</p>"
+        r"|NBA\s*\d+\s*:"
+        r"|High-Potential Empagliflozin Prescriber Identification"
+        r"|Clinical Evidence Foundation"
+        r"|Next Best Action Plan"
+        r"|Territory-Level Institutional Priority Summary"
+        r"|Cross-Cutting NBA Themes"
+        r"|Theme\s*\d+\s*:"
+        r"|Summary NBA Priority Matrix"
+        r"))",
+        re.IGNORECASE | re.DOTALL
     )
 
-    end_index = len(lines)
+    matches = list(section_start_pattern.finditer(html))
 
-    for j in range(start_index + 1, len(lines)):
-        current_line = lines[j].strip()
+    start_pos = None
 
-        if combined_heading_pattern.search(current_line):
-            end_index = j
+    # Find selected heading position
+    for match in matches:
+        block_start = match.start()
+        block_text = html[block_start:block_start + 500]
+        if search_norm in normalize_text(block_text):
+            start_pos = block_start
             break
 
-    selected_block = "\n".join(lines[start_index:end_index]).strip()
+    # Fallback direct search
+    if start_pos is None:
+        html_norm = html.replace("—", "-").replace("–", "-").lower()
+        heading_norm = search_heading.replace("—", "-").replace("–", "-").lower()
+        start_pos = html_norm.find(heading_norm)
 
-    return selected_block
+    if start_pos == -1 or start_pos is None:
+        return None
+
+    # Major headings that indicate next section
+    next_heading_regex = re.compile(
+        r"("
+        r"<h[1-6][^>]*>.*?</h[1-6]>"
+        r"|NBA\s*\d+\s*:"
+        r"|High-Potential Empagliflozin Prescriber Identification"
+        r"|Clinical Evidence Foundation"
+        r"|Next Best Action Plan"
+        r"|Territory-Level Institutional Priority Summary"
+        r"|Cross-Cutting NBA Themes"
+        r"|Theme\s*\d+\s*:"
+        r"|Summary NBA Priority Matrix"
+        r")",
+        re.IGNORECASE | re.DOTALL
+    )
+
+    end_pos = len(html)
+
+    for match in next_heading_regex.finditer(html):
+        if match.start() > start_pos + 30:
+            end_pos = match.start()
+            break
+
+    selected_html = html[start_pos:end_pos].strip()
+
+    return selected_html
 
 
 def parse_emails(email_text):
@@ -246,7 +260,7 @@ if st.session_state.generated_output:
 
     section_name = st.text_input(
         "Type the section heading you want to send",
-        placeholder="Example: NBA 1: Prof. Saleh A. Alqahtani — KFSHRC Riyadh"
+        placeholder="Example: NBA 7: Dr. Raed M. Sulaiman (#28) — Saudi Diabetes Research Networks / University Hospitals"
     )
 
     if st.button("Find Section"):
@@ -293,10 +307,18 @@ if st.session_state.generated_output:
                 st.warning("Please enter valid email addresses.")
                 st.stop()
 
+            html_email_body = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;">
+                {st.session_state.matched_block}
+            </body>
+            </html>
+            """
+
             email_payload = {
                 "mode": "send_email",
                 "emails": email_list,
-                "selected_output": st.session_state.matched_block
+                "selected_output": html_email_body
             }
 
             headers = {
