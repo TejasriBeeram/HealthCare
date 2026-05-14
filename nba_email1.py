@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import json
@@ -38,6 +37,7 @@ def extract_output(result):
     if isinstance(result, list):
         if len(result) > 0:
             first_item = result[0]
+
             if isinstance(first_item, dict):
                 return (
                     first_item.get("Customer_Story")
@@ -48,6 +48,7 @@ def extract_output(result):
                     or first_item
                 )
             return first_item
+
         return "No output returned."
 
     if isinstance(result, dict):
@@ -65,29 +66,59 @@ def extract_output(result):
 
 def split_nba_items(output_text):
     """
-    Splits generated output into selectable HCP/NBA sections.
-    This works best if your Bedrock output uses headings like:
-    HCP 1:, HCP 2:, NBA 1:, Recommendation 1:, etc.
+    Splits generated output into selectable blocks using real headings.
+    Example dropdown labels:
+    Tier 1: Highest-Priority HCP Targets
+    Tier 2: Medium-Priority HCP Targets
+    Step 2: NBA Strategy
+    Recommendation 1: ...
     """
 
     if not isinstance(output_text, str):
-        return [str(output_text)]
+        return [
+            {
+                "title": "Generated Output",
+                "content": str(output_text)
+            }
+        ]
 
-    pattern = r"(?=(?:HCP|NBA|Recommendation|Next Best Action)\s*\d+[:\.\-])"
+    # Match section headings
+    pattern = r"(?=^(?:Tier\s*\d+|Step\s*\d+|Recommendation\s*\d+|HCP\s*\d+|NBA\s*\d+|Next Best Action\s*\d+)[:.\-].*)"
 
-    parts = re.split(pattern, output_text, flags=re.IGNORECASE)
+    parts = re.split(
+        pattern,
+        output_text,
+        flags=re.IGNORECASE | re.MULTILINE
+    )
+
     parts = [p.strip() for p in parts if p.strip()]
 
-    if len(parts) > 1:
-        return parts
+    items = []
 
-    # fallback: split by double line breaks
-    fallback_parts = [p.strip() for p in output_text.split("\n\n") if p.strip()]
+    for part in parts:
+        lines = part.splitlines()
+        title = lines[0].strip() if lines else "Section"
 
-    if len(fallback_parts) > 1:
-        return fallback_parts
+        # Avoid very long dropdown titles
+        if len(title) > 90:
+            title = title[:90] + "..."
 
-    return [output_text]
+        items.append(
+            {
+                "title": title,
+                "content": part
+            }
+        )
+
+    if not items:
+        items.append(
+            {
+                "title": "Full Generated Output",
+                "content": output_text
+            }
+        )
+
+    return items
 
 
 def parse_emails(email_text):
@@ -119,19 +150,19 @@ role = st.selectbox(
 st.session_state.role = role
 
 # -----------------------------
-# CHAT STYLE PROMPT INPUT
+# PROMPT INPUT
 # -----------------------------
 user_prompt = st.text_area(
     "Ask your question",
     value=st.session_state.prompt,
     height=180,
-    placeholder="Example: Generate 5 HCP next best actions for diabetes."
+    placeholder="Example: Analyse call notes data and generate NBA for high-potential prescribers of Empagliflozin and explain why."
 )
 
 st.session_state.prompt = user_prompt
 
 # -----------------------------
-# GENERATE BUTTON
+# GENERATE OUTPUT BUTTON
 # -----------------------------
 if st.button("Generate Output"):
 
@@ -152,6 +183,7 @@ if st.button("Generate Output"):
 
     try:
         with st.spinner("Generating full output..."):
+
             response = requests.post(
                 API_URL,
                 headers=headers,
@@ -160,6 +192,7 @@ if st.button("Generate Output"):
             )
 
         if response.status_code == 200:
+
             try:
                 result = response.json()
             except ValueError:
@@ -184,7 +217,7 @@ if st.button("Generate Output"):
 
 
 # -----------------------------
-# DISPLAY GENERATED OUTPUT
+# DISPLAY FULL OUTPUT
 # -----------------------------
 if st.session_state.generated_output:
 
@@ -197,27 +230,36 @@ if st.session_state.generated_output:
 
     st.divider()
 
-    st.subheader("Send One Selected HCP/NBA by Email")
+    # -----------------------------
+    # SELECT ONE SECTION TO EMAIL
+    # -----------------------------
+    st.subheader("Send One Selected HCP/NBA Section by Email")
 
     nba_items = st.session_state.nba_items
 
     selected_index = st.selectbox(
-        "Select one HCP/NBA to email",
+        "Select one section to email",
         range(len(nba_items)),
-        format_func=lambda i: f"Option {i + 1}"
+        format_func=lambda i: nba_items[i]["title"]
     )
 
-    selected_output = nba_items[selected_index]
+    selected_output = nba_items[selected_index]["content"]
 
     st.markdown("### Selected Content Preview")
     st.markdown(selected_output, unsafe_allow_html=True)
 
+    # -----------------------------
+    # EMAIL INPUT
+    # -----------------------------
     emails = st.text_area(
         "Enter recipient email address(es)",
         placeholder="example1@email.com, example2@email.com\nor one email per line",
         height=100
     )
 
+    # -----------------------------
+    # SEND EMAIL BUTTON
+    # -----------------------------
     if st.button("Send Selected Email"):
 
         if not emails.strip():
@@ -242,7 +284,8 @@ if st.session_state.generated_output:
         }
 
         try:
-            with st.spinner("Sending selected HCP/NBA email..."):
+            with st.spinner("Sending selected section email..."):
+
                 email_response = requests.post(
                     API_URL,
                     headers=headers,
@@ -251,7 +294,7 @@ if st.session_state.generated_output:
                 )
 
             if email_response.status_code == 200:
-                st.success(f"Selected HCP/NBA sent to {len(email_list)} email(s).")
+                st.success(f"Selected section sent to {len(email_list)} email(s).")
             else:
                 st.error(f"Email API Error: {email_response.status_code}")
                 st.write(email_response.text)
