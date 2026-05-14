@@ -6,7 +6,7 @@ import re
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v6%20Task"
-API_KEY = "YOUR_NEW_TOKEN_HERE"
+API_KEY = "rdYvA7JMefys1fqzMnakjxvHuVVAhOBe"
 
 st.set_page_config(
     page_title="Commercial Pharma",
