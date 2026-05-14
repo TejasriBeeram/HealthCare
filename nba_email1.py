@@ -1,13 +1,12 @@
 import streamlit as st
 import requests
-import json
 import re
 
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v6%20Task"
-API_KEY = "rdYvA7JMefys1fqzMnakjxvHuVVAhOBe"
+API_KEY = "YOUR_NEW_TOKEN_HERE"
 
 st.set_page_config(
     page_title="Commercial Pharma",
@@ -27,8 +26,9 @@ if "role" not in st.session_state:
 if "generated_output" not in st.session_state:
     st.session_state.generated_output = None
 
-if "nba_items" not in st.session_state:
-    st.session_state.nba_items = []
+if "matched_block" not in st.session_state:
+    st.session_state.matched_block = None
+
 
 # -----------------------------
 # HELPER FUNCTIONS
@@ -37,7 +37,6 @@ def extract_output(result):
     if isinstance(result, list):
         if len(result) > 0:
             first_item = result[0]
-
             if isinstance(first_item, dict):
                 return (
                     first_item.get("Customer_Story")
@@ -45,10 +44,9 @@ def extract_output(result):
                     or first_item.get("output")
                     or first_item.get("answer")
                     or first_item.get("content")
-                    or first_item
+                    or str(first_item)
                 )
-            return first_item
-
+            return str(first_item)
         return "No output returned."
 
     if isinstance(result, dict):
@@ -58,67 +56,84 @@ def extract_output(result):
             or result.get("output")
             or result.get("answer")
             or result.get("content")
-            or result
+            or str(result)
         )
 
-    return result
+    return str(result)
 
 
-def split_nba_items(output_text):
+def normalize_text(text):
+    text = text.lower()
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = text.replace("—", "-").replace("–", "-")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def find_section_by_heading(full_output, search_heading):
     """
-    Splits generated output into selectable blocks using real headings.
-    Example dropdown labels:
-    Tier 1: Highest-Priority HCP Targets
-    Tier 2: Medium-Priority HCP Targets
-    Step 2: NBA Strategy
-    Recommendation 1: ...
+    Finds the section that starts with the heading typed by user.
+    Sends from that heading until the next major heading.
     """
 
-    if not isinstance(output_text, str):
-        return [
-            {
-                "title": "Generated Output",
-                "content": str(output_text)
-            }
-        ]
+    if not full_output or not search_heading:
+        return None
 
-    # Match section headings
-    pattern = r"(?=^(?:Tier\s*\d+|Step\s*\d+|Recommendation\s*\d+|HCP\s*\d+|NBA\s*\d+|Next Best Action\s*\d+)[:.\-].*)"
+    text = str(full_output)
 
-    parts = re.split(
-        pattern,
-        output_text,
-        flags=re.IGNORECASE | re.MULTILINE
+    # Remove common HTML tags for matching, but keep original content for sending
+    plain_text = re.sub(r"<[^>]+>", "", text)
+
+    search_norm = normalize_text(search_heading)
+    plain_norm = normalize_text(plain_text)
+
+    if search_norm not in plain_norm:
+        return None
+
+    # Find approximate position in original plain text
+    lines = plain_text.splitlines()
+
+    start_index = None
+
+    for i, line in enumerate(lines):
+        if search_norm in normalize_text(line):
+            start_index = i
+            break
+
+    if start_index is None:
+        return None
+
+    heading_patterns = [
+        r"^High-Potential Empagliflozin Prescriber Identification",
+        r"^Clinical Evidence Foundation",
+        r"^Next Best Action Plan",
+        r"^NBA\s*\d+\s*:",
+        r"^Territory-Level Institutional Priority Summary",
+        r"^Cross-Cutting NBA Themes",
+        r"^Theme\s*\d+\s*:",
+        r"^Summary NBA Priority Matrix",
+        r"^Methodology:",
+        r"^Overview",
+        r"^Objective:"
+    ]
+
+    combined_heading_pattern = re.compile(
+        "|".join(heading_patterns),
+        re.IGNORECASE
     )
 
-    parts = [p.strip() for p in parts if p.strip()]
+    end_index = len(lines)
 
-    items = []
+    for j in range(start_index + 1, len(lines)):
+        current_line = lines[j].strip()
 
-    for part in parts:
-        lines = part.splitlines()
-        title = lines[0].strip() if lines else "Section"
+        if combined_heading_pattern.search(current_line):
+            end_index = j
+            break
 
-        # Avoid very long dropdown titles
-        if len(title) > 90:
-            title = title[:90] + "..."
+    selected_block = "\n".join(lines[start_index:end_index]).strip()
 
-        items.append(
-            {
-                "title": title,
-                "content": part
-            }
-        )
-
-    if not items:
-        items.append(
-            {
-                "title": "Full Generated Output",
-                "content": output_text
-            }
-        )
-
-    return items
+    return selected_block
 
 
 def parse_emails(email_text):
@@ -183,7 +198,6 @@ if st.button("Generate Output"):
 
     try:
         with st.spinner("Generating full output..."):
-
             response = requests.post(
                 API_URL,
                 headers=headers,
@@ -192,7 +206,6 @@ if st.button("Generate Output"):
             )
 
         if response.status_code == 200:
-
             try:
                 result = response.json()
             except ValueError:
@@ -201,7 +214,7 @@ if st.button("Generate Output"):
             output = extract_output(result)
 
             st.session_state.generated_output = output
-            st.session_state.nba_items = split_nba_items(output)
+            st.session_state.matched_block = None
 
             st.success("Output generated successfully.")
 
@@ -222,85 +235,92 @@ if st.button("Generate Output"):
 if st.session_state.generated_output:
 
     st.subheader("Generated Full Output")
-
-    if isinstance(st.session_state.generated_output, str):
-        st.markdown(st.session_state.generated_output, unsafe_allow_html=True)
-    else:
-        st.json(st.session_state.generated_output)
+    st.markdown(st.session_state.generated_output, unsafe_allow_html=True)
 
     st.divider()
 
     # -----------------------------
-    # SELECT ONE SECTION TO EMAIL
+    # TYPE SECTION NAME TO SEND
     # -----------------------------
-    st.subheader("Send One Selected HCP/NBA Section by Email")
+    st.subheader("Send Specific Section by Email")
 
-    nba_items = st.session_state.nba_items
-
-    selected_index = st.selectbox(
-        "Select one section to email",
-        range(len(nba_items)),
-        format_func=lambda i: nba_items[i]["title"]
+    section_name = st.text_input(
+        "Type the section heading you want to send",
+        placeholder="Example: NBA 1: Prof. Saleh A. Alqahtani — KFSHRC Riyadh"
     )
 
-    selected_output = nba_items[selected_index]["content"]
+    if st.button("Find Section"):
 
-    st.markdown("### Selected Content Preview")
-    st.markdown(selected_output, unsafe_allow_html=True)
-
-    # -----------------------------
-    # EMAIL INPUT
-    # -----------------------------
-    emails = st.text_area(
-        "Enter recipient email address(es)",
-        placeholder="example1@email.com, example2@email.com\nor one email per line",
-        height=100
-    )
-
-    # -----------------------------
-    # SEND EMAIL BUTTON
-    # -----------------------------
-    if st.button("Send Selected Email"):
-
-        if not emails.strip():
-            st.warning("Please enter at least one recipient email address.")
+        if not section_name.strip():
+            st.warning("Please enter the section heading.")
             st.stop()
 
-        email_list = parse_emails(emails)
+        matched_block = find_section_by_heading(
+            st.session_state.generated_output,
+            section_name
+        )
 
-        if not email_list:
-            st.warning("Please enter valid email addresses.")
-            st.stop()
+        if matched_block:
+            st.session_state.matched_block = matched_block
+            st.success("Section found.")
+        else:
+            st.session_state.matched_block = None
+            st.error("No matching section found. Please copy the exact heading from the generated output.")
 
-        email_payload = {
-            "mode": "send_email",
-            "emails": email_list,
-            "selected_output": selected_output
-        }
+    # -----------------------------
+    # DISPLAY MATCHED SECTION
+    # -----------------------------
+    if st.session_state.matched_block:
 
-        headers = {
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json"
-        }
+        st.markdown("### Selected Section Preview")
+        st.markdown(st.session_state.matched_block, unsafe_allow_html=True)
 
-        try:
-            with st.spinner("Sending selected section email..."):
+        emails = st.text_area(
+            "Enter recipient email address(es)",
+            placeholder="example1@email.com, example2@email.com\nor one email per line",
+            height=100
+        )
 
-                email_response = requests.post(
-                    API_URL,
-                    headers=headers,
-                    json=email_payload,
-                    timeout=120
-                )
+        if st.button("Send Selected Section Email"):
 
-            if email_response.status_code == 200:
-                st.success(f"Selected section sent to {len(email_list)} email(s).")
-            else:
-                st.error(f"Email API Error: {email_response.status_code}")
-                st.write(email_response.text)
+            if not emails.strip():
+                st.warning("Please enter at least one recipient email address.")
+                st.stop()
 
-        except requests.exceptions.Timeout:
-            st.error("Email request timed out.")
+            email_list = parse_emails(emails)
 
-        except Exception as e:
-            st.error(f"Error: {e}")
+            if not email_list:
+                st.warning("Please enter valid email addresses.")
+                st.stop()
+
+            email_payload = {
+                "mode": "send_email",
+                "emails": email_list,
+                "selected_output": st.session_state.matched_block
+            }
+
+            headers = {
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            }
+
+            try:
+                with st.spinner("Sending selected section email..."):
+                    email_response = requests.post(
+                        API_URL,
+                        headers=headers,
+                        json=email_payload,
+                        timeout=120
+                    )
+
+                if email_response.status_code == 200:
+                    st.success(f"Selected section sent to {len(email_list)} email(s).")
+                else:
+                    st.error(f"Email API Error: {email_response.status_code}")
+                    st.write(email_response.text)
+
+            except requests.exceptions.Timeout:
+                st.error("Email request timed out.")
+
+            except Exception as e:
+                st.error(f"Error: {e}")
