@@ -1,6 +1,6 @@
-import streamlit as st
+         import streamlit as st
 import requests
-import json
+import re
 
 # -----------------------------
 # CONFIGURATION
@@ -24,9 +24,12 @@ if "full_report" not in st.session_state:
 # FUNCTIONS
 # -----------------------------
 def clean_html(text):
+
     text = str(text)
+
     text = text.replace("```html", "")
     text = text.replace("```", "")
+
     return text.strip()
 
 
@@ -67,6 +70,7 @@ def extract_section(report, keyword):
 
     report = clean_html(report)
 
+    # Split by HTML headings
     sections = re.split(
         r"(?=<h1|<h2|<h3)",
         report,
@@ -76,19 +80,57 @@ def extract_section(report, keyword):
     for section in sections:
 
         if keyword.lower() in section.lower():
+
             return section
 
+    # Fallback
     return f"""
     <h2>Section Not Found</h2>
-    <p>No section found for:
+    <p>No matching section found for:
     <b>{keyword}</b></p>
+    <p>Please try another keyword.</p>
     """
+
+
+def call_snaplogic(payload):
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(
+        API_URL,
+        headers=headers,
+        json=payload,
+        timeout=600
+    )
+
+    if response.status_code != 200:
+
+        st.error(f"API Error: {response.status_code}")
+        st.write(response.text)
+
+        return None
+
+    try:
+
+        result = response.json()
+
+    except:
+
+        result = response.text
+
+    return extract_output(result)
 
 # -----------------------------
 # UI
 # -----------------------------
 st.title("Commercial Pharma Assistant")
 
+# -----------------------------
+# ROLE
+# -----------------------------
 role = st.selectbox(
     "Select Role",
     [
@@ -98,14 +140,21 @@ role = st.selectbox(
     ]
 )
 
+# -----------------------------
+# EMAILS
+# -----------------------------
 emails = st.text_area(
     "Enter recipient email addresses",
-    placeholder="abc@test.com, xyz@test.com"
+    placeholder="abc@test.com, xyz@test.com",
+    height=100
 )
 
+# -----------------------------
+# PROMPT
+# -----------------------------
 user_prompt = st.text_area(
     "Enter your prompt",
-    height=180
+    height=200
 )
 
 # -----------------------------
@@ -113,35 +162,23 @@ user_prompt = st.text_area(
 # -----------------------------
 if st.button("Generate Full Report"):
 
+    if not user_prompt.strip():
+
+        st.warning("Please enter your prompt.")
+        st.stop()
+
     payload = {
         "question_type": role,
         "prompt": user_prompt
     }
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-
     try:
 
-        with st.spinner("Generating report..."):
+        with st.spinner("Generating full report..."):
 
-            response = requests.post(
-                API_URL,
-                headers=headers,
-                json=payload,
-                timeout=600
-            )
+            output = call_snaplogic(payload)
 
-        if response.status_code == 200:
-
-            try:
-                result = response.json()
-            except:
-                result = response.text
-
-            output = extract_output(result)
+        if output:
 
             output = clean_html(output)
 
@@ -149,10 +186,11 @@ if st.button("Generate Full Report"):
 
             st.success("Report generated successfully.")
 
-        else:
+    except requests.exceptions.Timeout:
 
-            st.error(f"API Error: {response.status_code}")
-            st.write(response.text)
+        st.error(
+            "Request timed out after 10 minutes."
+        )
 
     except Exception as e:
 
@@ -173,7 +211,7 @@ if st.session_state.full_report:
     st.divider()
 
     # -----------------------------
-    # SELECT SECTION
+    # SECTION TO SEND
     # -----------------------------
     selected_section = st.text_input(
         "Which section do you want to send?",
@@ -187,7 +225,7 @@ if st.session_state.full_report:
             selected_section
         )
 
-        st.subheader("Email Preview")
+        st.subheader("Selected Section Preview")
 
         st.markdown(
             selected_content,
@@ -195,7 +233,7 @@ if st.session_state.full_report:
         )
 
         # -----------------------------
-        # SEND EMAIL
+        # SEND EMAIL BUTTON
         # -----------------------------
         if st.button("Send Selected Section Email"):
 
@@ -205,25 +243,53 @@ if st.session_state.full_report:
                 if e.strip()
             ]
 
-            payload = {
-                "emails": email_list,
-                "email_content": selected_content
-            }
+            if not email_list:
 
-            headers = {
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
+                st.warning(
+                    "Please enter recipient email addresses."
+                )
+
+                st.stop()
+
+            # IMPORTANT:
+            # Reuse existing SnapLogic pipeline
+            # by sending selected section as prompt
+            payload = {
+                "question_type": role,
+                "prompt": f"""
+Return ONLY the below selected report section.
+
+Do not add extra sections.
+Do not return the full report.
+
+Return clean HTML email content only.
+
+Do not use Markdown.
+Do not use #, ##, **.
+Do not use ```html.
+Do not use code blocks.
+
+SELECTED REPORT SECTION:
+
+{selected_content}
+""",
+                "emails": email_list
             }
 
             try:
 
-                with st.spinner("Sending email..."):
+                with st.spinner(
+                    "Sending selected section email..."
+                ):
 
                     response = requests.post(
                         API_URL,
-                        headers=headers,
+                        headers={
+                            "Authorization": f"Bearer {API_KEY}",
+                            "Content-Type": "application/json"
+                        },
                         json=payload,
-                        timeout=300
+                        timeout=600
                     )
 
                 if response.status_code == 200:
@@ -234,8 +300,17 @@ if st.session_state.full_report:
 
                 else:
 
-                    st.error(f"API Error: {response.status_code}")
+                    st.error(
+                        f"API Error: {response.status_code}"
+                    )
+
                     st.write(response.text)
+
+            except requests.exceptions.Timeout:
+
+                st.error(
+                    "Request timed out after 10 minutes."
+                )
 
             except Exception as e:
 
