@@ -1,12 +1,21 @@
 import streamlit as st
 import requests
 import re
+import time
 
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
 API_URL = "https://emea.snaplogic.com/api/1/rest/slsched/feed/ConnectFasterInc/projects/Tejasri%20Reddy%20Beeram/Diabetes_v6%20Task"
-API_KEY = "rdYvA7JMefys1fqzMnakjxvHuVVAhOBe"
+
+# Replace with your latest SnapLogic bearer token
+API_KEY = "rdYvA7JMefys1fqzMnakjxvHuVVAhOBe".strip()
+
+# Longer timeout for Bedrock generation
+GENERATE_TIMEOUT = 600
+
+# Shorter timeout for email route
+EMAIL_TIMEOUT = 240
 
 st.set_page_config(
     page_title="Commercial Pharma",
@@ -33,6 +42,45 @@ if "matched_block" not in st.session_state:
 # -----------------------------
 # HELPER FUNCTIONS
 # -----------------------------
+def make_api_call(payload, timeout_seconds):
+    """
+    Calls SnapLogic with one retry if timeout happens.
+    """
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json=payload,
+            timeout=timeout_seconds
+        )
+        return response, None
+
+    except requests.exceptions.Timeout:
+        # Retry once after short pause
+        time.sleep(3)
+
+        try:
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                json=payload,
+                timeout=timeout_seconds
+            )
+            return response, None
+
+        except requests.exceptions.Timeout:
+            return None, "timeout"
+
+    except Exception as e:
+        return None, str(e)
+
+
 def extract_output(result):
     if isinstance(result, list) and len(result) > 0:
         first_item = result[0]
@@ -80,11 +128,8 @@ def find_section_by_heading(full_output, search_heading):
         return None
 
     html = str(full_output)
-
-    # Find heading in original HTML
     search_norm = normalize_text(search_heading)
 
-    # Split HTML into blocks using headings such as h1, h2, h3, p, table, etc.
     section_start_pattern = re.compile(
         r"(?=("
         r"<h[1-6][^>]*>.*?</h[1-6]>"
@@ -105,15 +150,14 @@ def find_section_by_heading(full_output, search_heading):
 
     start_pos = None
 
-    # Find selected heading position
     for match in matches:
         block_start = match.start()
-        block_text = html[block_start:block_start + 500]
+        block_text = html[block_start:block_start + 700]
+
         if search_norm in normalize_text(block_text):
             start_pos = block_start
             break
 
-    # Fallback direct search
     if start_pos is None:
         html_norm = html.replace("—", "-").replace("–", "-").lower()
         heading_norm = search_heading.replace("—", "-").replace("–", "-").lower()
@@ -122,7 +166,6 @@ def find_section_by_heading(full_output, search_heading):
     if start_pos == -1 or start_pos is None:
         return None
 
-    # Major headings that indicate next section
     next_heading_regex = re.compile(
         r"("
         r"<h[1-6][^>]*>.*?</h[1-6]>"
@@ -205,42 +248,40 @@ if st.button("Generate Output"):
         "prompt": st.session_state.prompt
     }
 
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
+    with st.spinner("Generating full output. This may take longer for large SnapLogic/Bedrock responses..."):
 
-    try:
-        with st.spinner("Generating full output..."):
-            response = requests.post(
-                API_URL,
-                headers=headers,
-                json=generate_payload,
-                timeout=180
-            )
+        response, error = make_api_call(
+            generate_payload,
+            GENERATE_TIMEOUT
+        )
 
-        if response.status_code == 200:
-            try:
-                result = response.json()
-            except ValueError:
-                result = response.text
+    if error == "timeout":
+        st.error(
+            "Request timed out even after retry. Please reduce output size or set maximumTokens in Bedrock Converse API."
+        )
+        st.stop()
 
-            output = extract_output(result)
+    elif error:
+        st.error(f"Error: {error}")
+        st.stop()
 
-            st.session_state.generated_output = output
-            st.session_state.matched_block = None
+    if response.status_code == 200:
 
-            st.success("Output generated successfully.")
+        try:
+            result = response.json()
+        except ValueError:
+            result = response.text
 
-        else:
-            st.error(f"API Error: {response.status_code}")
-            st.write(response.text)
+        output = extract_output(result)
 
-    except requests.exceptions.Timeout:
-        st.error("Request timed out. Please optimise the SnapLogic pipeline or increase timeout.")
+        st.session_state.generated_output = output
+        st.session_state.matched_block = None
 
-    except Exception as e:
-        st.error(f"Error: {e}")
+        st.success("Output generated successfully.")
+
+    else:
+        st.error(f"API Error: {response.status_code}")
+        st.write(response.text)
 
 
 # -----------------------------
@@ -321,28 +362,25 @@ if st.session_state.generated_output:
                 "selected_output": html_email_body
             }
 
-            headers = {
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            }
+            with st.spinner("Sending selected section email..."):
 
-            try:
-                with st.spinner("Sending selected section email..."):
-                    email_response = requests.post(
-                        API_URL,
-                        headers=headers,
-                        json=email_payload,
-                        timeout=120
-                    )
+                email_response, email_error = make_api_call(
+                    email_payload,
+                    EMAIL_TIMEOUT
+                )
 
-                if email_response.status_code == 200:
-                    st.success(f"Selected section sent to {len(email_list)} email(s).")
-                else:
-                    st.error(f"Email API Error: {email_response.status_code}")
-                    st.write(email_response.text)
+            if email_error == "timeout":
+                st.error(
+                    "Email request timed out. Check if the send_email route is skipping Bedrock and going directly to Email Sender."
+                )
+                st.stop()
 
-            except requests.exceptions.Timeout:
-                st.error("Email request timed out.")
+            elif email_error:
+                st.error(f"Error: {email_error}")
+                st.stop()
 
-            except Exception as e:
-                st.error(f"Error: {e}")
+            if email_response.status_code == 200:
+                st.success(f"Selected section sent to {len(email_list)} email(s).")
+            else:
+                st.error(f"Email API Error: {email_response.status_code}")
+                st.write(email_response.text)
